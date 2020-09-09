@@ -1,16 +1,14 @@
 #include <iostream>
+#include <memory>
 #include "basic.h"
+#include "Matrix.h"
 
 using namespace std;
 
 int main(){
-    int a[4] = {1,2,3,4};
-    double b[4] = {1.1111,2,3,4};
-
-    int sum = basic::sum(a);
-
-
-    cout << sum << endl;
+    unique_ptr<int> ptr = make_unique<int>(1);
+    *ptr = 1;
+    cout << *ptr << endl;
 
     return 0;
 }

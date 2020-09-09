@@ -113,7 +113,6 @@ Matrix<T>::Matrix(const Matrix<T>& matrix){
 template <typename T>
 Matrix<T>::~Matrix(){
     delete [] this->data;
-    // std::cout << "deleted" << std::endl;
     return;
 }
 
