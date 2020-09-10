@@ -9,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "basic.h"
+#include "Basic.h"
 
 template <typename T>
 class Matrix {

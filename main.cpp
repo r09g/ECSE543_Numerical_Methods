@@ -7,7 +7,7 @@
 #include <fstream>
 #include <ctime>
 #include "Matrix.h"
-#include "basic.h"
+#include "Basic.h"
 
 using namespace std;
 
