@@ -4,19 +4,26 @@
 */
 
 #include <iostream>
+#include <fstream>
+#include <ctime>
 #include "Matrix.h"
 #include "basic.h"
 
 using namespace std;
 
 int main(){
+    clock_t start = clock();
+    
+    Matrix<double> mat1 = Matrix<double>::read_mat("test.csv");
 
-    int a[] = {1,2,3,2};
-    int b[] = {0,0,0,0};
-    Matrix<int> m1(2,2,a);
-    Matrix<int> m2(2,2,b);
-    Matrix<int> m3 = m1.div(m2);
+    Matrix<double> mat2(mat1);
+    mat2.transpose();
 
-    m3.show();
+    Matrix<double> mat3 = mat1 * mat2;
+
+    cout << mat3.mean() << endl;
+
+    double duration = (clock() - start) / (double)(CLOCKS_PER_SEC);
+    cout << "Executed in " << duration << "s" << endl;
     return 0;
 }

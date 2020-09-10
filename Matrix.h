@@ -7,6 +7,8 @@
 #define __MATRIX_H__
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "basic.h"
 
 template <typename T>
@@ -62,11 +64,21 @@ class Matrix {
         Matrix<T>& operator- (const T value);
         Matrix<T>& operator* (const T value);
         T sum();
+        T mean();
 
         // check matrix characteristics
         bool is_square();
         bool is_symmetric();
         bool operator== (const Matrix& matrix);
+
+        // matrix data type conversions
+        Matrix<T>& to_int();
+        Matrix<T>& to_double();
+        Matrix<T>& to_float();
+
+        // I/O to Excel
+        static Matrix<double>& read_mat(const std::string& filepath);
+        void write_mat(const std::string& filepath);
 
         // destructor
         ~Matrix();
@@ -81,6 +93,37 @@ T* Matrix<T>::deep_copy(const T* data, unsigned int length){
         new_data[i] = data[i];
     }
     return new_data;
+}
+
+template <typename T>
+Matrix<double>& Matrix<T>::read_mat(const std::string& filepath){
+    
+    std::ifstream file;
+    file.open(filepath);
+    
+    int n_row, n_col;
+    std::string line, output;
+    getline(file, line);
+    std::stringstream ss(line);
+    getline(ss, output, ',');
+    n_row = stoi(output);
+    getline(ss, output, ',');
+    n_col = stoi(output);  
+    
+    Matrix<double>* new_matrix = new Matrix<double>(n_row, n_col);
+    int row = 0;
+    int col = 0;
+    while(getline(file,line)){
+        std::stringstream ss(line);
+        col = 0;
+        while(getline(ss, output, ',')){
+            new_matrix->set(row, col, stod(output));
+            col++;
+        }
+        row++;
+    }
+    file.close();
+    return *new_matrix;
 }
 
 // -----------------------------------------------------------------------------
@@ -127,7 +170,7 @@ void Matrix<T>::show() const {
     for(int i = 0; i < this->n_row; i++){
         std::cout << "[ ";
         for(int j = 0; j < this->n_col; j++){
-            std::cout << this->data[this->get_index(i,j)] << ",";
+            std::cout << this->get(i,j) << ",";
         }
         std::cout << " ]" << std::endl;
     }
@@ -136,7 +179,7 @@ void Matrix<T>::show() const {
 
 template <typename T>
 T* Matrix<T>::get() const {
-    return this->data;
+    return deep_copy(this->data, this->n_col*this->n_row);
 }
 
 template <typename T>
@@ -216,7 +259,7 @@ void Matrix<T>::transpose(){
     T* new_data = new T[this->n_col * this->n_row]();
     for(int i = 0; i < this->n_row; i++){
         for(int j = 0; j < this->n_col; j++){
-            new_data[j*this->n_row + i] = this->data[this->get_index(i,j)];
+            new_data[j*this->n_row + i] = this->get(i,j);
         }
     }
     delete [] this->data;
@@ -340,6 +383,11 @@ T Matrix<T>::sum(){
 }
 
 template <typename T>
+T Matrix<T>::mean(){
+    return basic::mean(this->data,this->n_col * this->n_row);
+}
+
+template <typename T>
 bool Matrix<T>::is_square(){
     return this->n_col == this->n_row;
 }
@@ -351,8 +399,7 @@ bool Matrix<T>::is_symmetric(){
     }
     for(int i = 0; i < this->n_row; i++){
         for(int j = 0; j < i; j++){
-            if(this->data[this->get_index(i,j)] 
-                == this->data[this->get_index(j,i)]){
+            if(this->get(i,j) == this->get(j,i)){
                 continue;
             } else {
                 return false;
@@ -376,6 +423,45 @@ bool Matrix<T>::operator== (const Matrix& matrix){
     }
     return true;
 }
+
+template <typename T>
+void Matrix<T>::write_mat(const std::string& filepath){
+    std::stringstream ss;
+    std::ofstream file;
+    file.open(filepath);
+    ss << this->n_row << "," << this->n_col << std::endl;
+    for(int i = 0; i < this->n_col; i++){
+        for(int j = 0; j < this->n_row; j++){
+            ss << this->get(i,j) << ",";
+        } 
+        ss << std::endl;
+    }
+    file << ss.str();
+    file.close();
+    return;
+}
+
+template <typename T>
+Matrix<T>& Matrix<T>::to_int(){
+    Matrix<int>* new_matrix = new Matrix<int>(this->n_row, this->n_col);
+    new_matrix->data = basic::to_int(this->data, this->n_row * this->n_col);
+    return *new_matrix;
+}
+
+template <typename T>
+Matrix<T>& Matrix<T>::to_double(){
+    Matrix<double>* new_matrix = new Matrix<double>(this->n_row, this->n_col);
+    new_matrix->data = basic::to_double(this->data, this->n_row * this->n_col);
+    return *new_matrix;
+}
+
+template <typename T>
+Matrix<T>& Matrix<T>::to_float(){
+    Matrix<float>* new_matrix = new Matrix<float>(this->n_row, this->n_col);
+    new_matrix->data = basic::to_float(this->data, this->n_row * this->n_col);
+    return *new_matrix;
+}
+
 
 
 #endif
