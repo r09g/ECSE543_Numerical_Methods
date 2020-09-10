@@ -369,7 +369,7 @@ Matrix<T>& Matrix<T>::operator* (const Matrix<T>& matrix){
             Matrix<T>* mat1 = this->get(i,i,0,this->n_col-1);
             Matrix<T>* mat2 = matrix.get(0,matrix.n_row-1,j,j);
             output->data[output->get_index(i,j)] 
-                = basic::dot(mat1->data, mat2->data, this->n_col);
+                = Basic::dot(mat1->data, mat2->data, this->n_col);
             delete mat1;
             delete mat2;
         }
@@ -379,12 +379,12 @@ Matrix<T>& Matrix<T>::operator* (const Matrix<T>& matrix){
 
 template <typename T>
 T Matrix<T>::sum(){
-    return basic::sum(this->data,this->n_col * this->n_row);
+    return Basic::sum(this->data,this->n_col * this->n_row);
 }
 
 template <typename T>
 T Matrix<T>::mean(){
-    return basic::mean(this->data,this->n_col * this->n_row);
+    return Basic::mean(this->data,this->n_col * this->n_row);
 }
 
 template <typename T>
@@ -444,21 +444,21 @@ void Matrix<T>::write_mat(const std::string& filepath){
 template <typename T>
 Matrix<T>& Matrix<T>::to_int(){
     Matrix<int>* new_matrix = new Matrix<int>(this->n_row, this->n_col);
-    new_matrix->data = basic::to_int(this->data, this->n_row * this->n_col);
+    new_matrix->data = Basic::to_int(this->data, this->n_row * this->n_col);
     return *new_matrix;
 }
 
 template <typename T>
 Matrix<T>& Matrix<T>::to_double(){
     Matrix<double>* new_matrix = new Matrix<double>(this->n_row, this->n_col);
-    new_matrix->data = basic::to_double(this->data, this->n_row * this->n_col);
+    new_matrix->data = Basic::to_double(this->data, this->n_row * this->n_col);
     return *new_matrix;
 }
 
 template <typename T>
 Matrix<T>& Matrix<T>::to_float(){
     Matrix<float>* new_matrix = new Matrix<float>(this->n_row, this->n_col);
-    new_matrix->data = basic::to_float(this->data, this->n_row * this->n_col);
+    new_matrix->data = Basic::to_float(this->data, this->n_row * this->n_col);
     return *new_matrix;
 }
 
