@@ -1,7 +1,8 @@
-/*
-    Author: Raymond Yang
-    Date: 2020/09/09
-*/
+/******************************************************************************/
+/* Name: Matrix.h                                                             */
+/* Date: 2020/09/10                                                           */
+/* Author: Raymond Yang                                                       */
+/******************************************************************************/
 
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
@@ -9,6 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cassert>
+#include <new>
 #include "Basic.h"
 
 template <typename T>
@@ -20,16 +23,18 @@ class Matrix {
         T* data = NULL;
 
         // memory allocation
-        T* allocate_memory(int n_row, int n_col);
+        T* allocate(int n_row, int n_col);
+        void deallocate();
 
         // deep copy
-        Matrix<T>* deep_copy() const;
+        Matrix<T> deep_copy() const;
 
     public:
         // constructors
+        Matrix();
         Matrix(int n_row, int n_col);
         Matrix(int n_row, int n_col, const T* data);
-        Matrix(const Matrix<T>& matrix);
+        Matrix(const Matrix<T>& mat);
 
         // show entire matrix
         void show() const;
@@ -40,41 +45,44 @@ class Matrix {
         // getters and setters
         T* get() const;
         void set(const T* data, unsigned int length);
+        void set(T*&& data);
         T get(int row, int col) const;
         void set(int row, int col, T value);
-        Matrix<T>* get(int row1, int row2, int col1, int col2) const;
-        void set(int row, int col, const Matrix<T>& matrix);
+        T get(int index);
+        void set(int index, T value);
+        Matrix<T> get(int row1, int row2, int col1, int col2) const;
+        void set(int row, int col, const Matrix<T>& mat);
+        Matrix<T> get_row(int row) const;
+        Matrix<T> get_col(int col) const;
         int get_n_row() const;
         int get_n_col() const;
 
         // copy (duplicate) matrix
-        Matrix<T>& operator= (const Matrix<T>& matrix);
+        Matrix<T>& operator= (const Matrix<T>& mat);
+        Matrix<T>& operator= (const T* data);
         static T* deep_copy(const T* data, unsigned int length);
 
         // matrix operations
         void transpose();
-        Matrix<T>& mul(const Matrix<T>& matrix);
-        Matrix<T>& div(const Matrix<T>& matrix);
-        Matrix<T>& operator+ (const Matrix<T>& matrix);
-        Matrix<T>& operator- (const Matrix<T>& matrix);
-        Matrix<T>& operator* (const Matrix<T>& matrix);
-        Matrix<T>& mul(const T value);
-        Matrix<T>& div(const T value);
-        Matrix<T>& operator+ (const T value);
-        Matrix<T>& operator- (const T value);
-        Matrix<T>& operator* (const T value);
+        Matrix<T> mul(const Matrix<T>& mat);
+        Matrix<T> div(const Matrix<T>& mat);
+        Matrix<T> operator+ (const Matrix<T>& mat);
+        Matrix<T> operator- (const Matrix<T>& mat);
+        Matrix<T> operator* (const Matrix<T>& mat);
+        Matrix<T> mul(const T value);
+        Matrix<T> div(const T value);
         T sum();
         T mean();
 
         // check matrix characteristics
         bool is_square();
         bool is_symmetric();
-        bool operator== (const Matrix& matrix);
+        bool operator== (const Matrix& mat);
 
         // matrix data type conversions
-        Matrix<T>& to_int();
-        Matrix<T>& to_double();
-        Matrix<T>& to_float();
+        Matrix<int> to_int();
+        Matrix<double> to_double();
+        Matrix<float> to_float();
 
         // I/O to Excel
         static Matrix<double>& read_mat(const std::string& filepath);
@@ -85,7 +93,8 @@ class Matrix {
 };
 
 // -----------------------------------------------------------------------------
-
+// Static Member-Functions
+// -----------------------------------------------------------------------------
 template <typename T>
 T* Matrix<T>::deep_copy(const T* data, unsigned int length){
     T* new_data = new T[length]();
@@ -127,10 +136,17 @@ Matrix<double>& Matrix<T>::read_mat(const std::string& filepath){
 }
 
 // -----------------------------------------------------------------------------
+// Constructors  & Destructor
+// -----------------------------------------------------------------------------
+template <typename T>
+Matrix<T>::Matrix(): n_row(0), n_col(0) {
+    this->data = allocate(n_row, n_col);
+    return;
+}
 
 template <typename T>
 Matrix<T>::Matrix(int n_row, int n_col): n_row(n_row), n_col(n_col) {
-    this->data = allocate_memory(n_row, n_col);
+    this->data = allocate(n_row, n_col);
     return;
 }
 
@@ -138,7 +154,7 @@ template <typename T>
 Matrix<T>::Matrix(int n_row, int n_col, const T* data){
     this->n_row = n_row;
     this->n_col = n_col;
-    this->data = allocate_memory(this->n_row, this->n_col);
+    this->data = allocate(this->n_row, this->n_col);
     for(int i = 0; i < n_row*n_col; i++){
         this->data[i] = data[i];
     }
@@ -146,29 +162,49 @@ Matrix<T>::Matrix(int n_row, int n_col, const T* data){
 }
 
 template <typename T>
-Matrix<T>::Matrix(const Matrix<T>& matrix){
-    this->n_col = matrix.n_col;
-    this->n_row = matrix.n_row;
-    this->data = deep_copy(matrix.data, this->n_row * this->n_col); 
+Matrix<T>::Matrix(const Matrix<T>& mat): n_row(mat.n_row), n_col(mat.n_col){
+    this->data = deep_copy(mat.data, this->n_row * this->n_col); 
     return;
 }
 
 template <typename T>
 Matrix<T>::~Matrix(){
-    delete [] this->data;
+    this->deallocate();
+    // std::cout << "deleted" << std::endl;
     return;
 }
 
+// -----------------------------------------------------------------------------
+// Member-Functions
+// -----------------------------------------------------------------------------
 template <typename T>
-T* Matrix<T>::allocate_memory(int n_row, int n_col){
-    T* new_data = new T[this->n_row * this->n_col]();
+T* Matrix<T>::allocate(int n_row, int n_col){
+    T* new_data = NULL;
+    try{
+        new_data = new T[this->n_row * this->n_col]();
+    } catch(std::bad_alloc& e){
+        std::cout << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    // std::cout << "created" << std::endl;
     return new_data;
 }
 
 template <typename T>
+void Matrix<T>::deallocate(){
+    delete [] this->data;
+    this->data = NULL;
+    // std::cout << "deallocated" << std::endl;
+    return;
+}
+
+template <typename T>
 void Matrix<T>::show() const {
+    if(this->n_row == 0 && this->n_col == 0){
+        std::cout << "0 [ ]" << std::endl;
+    }
     for(int i = 0; i < this->n_row; i++){
-        std::cout << "[ ";
+        std::cout << i << " [ ";
         for(int j = 0; j < this->n_col; j++){
             std::cout << this->get(i,j) << ",";
         }
@@ -185,9 +221,19 @@ T* Matrix<T>::get() const {
 template <typename T>
 void Matrix<T>::set(const T* data, unsigned int length){
     if(this->data != NULL){
-        delete [] this->data;
+        this->deallocate();
     }
     this->data = deep_copy(data, length);
+    return;
+}
+
+template <typename T>
+void Matrix<T>::set(T*&& data){
+    if(this->data != NULL){
+        this->deallocate();
+    }
+    this->data = data;
+    data = NULL;
     return;
 }
 
@@ -203,26 +249,55 @@ void Matrix<T>::set(int row, int col, T value){
 }
 
 template <typename T>
-Matrix<T>* Matrix<T>::get(int row1, int row2, int col1, int col2) const {
-    Matrix<T>* new_matrix = new Matrix<T>(row2 - row1 + 1, col2 - col1 + 1);
-    for(int i = 0; i < new_matrix->n_row; i++){
-        for(int j = 0; j < new_matrix->n_col; j++){
-            new_matrix->data[new_matrix->get_index(i,j)] 
-                = this->get(row1 + i, col1 + j);
-        }
-    }
-    return new_matrix;
+T Matrix<T>::get(int index){
+    return this->data[index];
 }
 
 template <typename T>
-void Matrix<T>::set(int row, int col, const Matrix<T>& matrix){
-    for(int i = 0; i < matrix.n_row; i++){
-        for(int j = 0; j < matrix.n_col; j++){
+void Matrix<T>::set(int index, T value){
+    this->data[index] = value;
+    return;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::get(int row1, int row2, int col1, int col2) const {
+    Matrix<T> new_mat(row2 - row1 + 1, col2 - col1 + 1);
+    for(int i = 0; i < new_mat.n_row; i++){
+        for(int j = 0; j < new_mat.n_col; j++){
+            new_mat.data[new_mat.get_index(i,j)] 
+                = this->get(row1 + i, col1 + j);
+        }
+    }
+    return new_mat;
+}
+
+template <typename T>
+void Matrix<T>::set(int row, int col, const Matrix<T>& mat){
+    for(int i = 0; i < mat.n_row; i++){
+        for(int j = 0; j < mat.n_col; j++){
             this->data[this->get_index(row + i, col + j)]
-                = matrix.data[i*matrix.n_col + j];
+                = mat.data[i*mat.n_col + j];
         }
     }
     return;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::get_row(int row) const {
+    Matrix<T> new_mat(1, this->n.col);
+    for(int i = 0; i < this->n.col; i++){
+        new_mat.data[i] = this->get(row, i);
+    }
+    return new_mat;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::get_col(int col) const {
+    Matrix<T> new_mat(this->n.col, 1);
+    for(int i = 0; i < this->n.row; i++){
+        new_mat.data[i] = this->get(i, col);
+    }
+    return new_mat;
 }
 
 template <typename T>
@@ -241,15 +316,23 @@ int Matrix<T>::get_n_col() const{
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::operator= (const Matrix<T>& matrix){
-    this->n_col = matrix.n_col;
-    this->n_row = matrix.n_row;
+Matrix<T>& Matrix<T>::operator= (const Matrix<T>& mat){
+    this->n_col = mat.n_col;
+    this->n_row = mat.n_row;
     if(this->data != NULL){
-        delete [] this->data;
+        this->deallocate();
     }
-    this->data = allocate_memory(this->n_row, this->n_col);
-    for(int i = 0; i < matrix.n_row * matrix.n_col; i++){
-        this->data[i] = matrix.data[i];
+    this->data = allocate(this->n_row, this->n_col);
+    for(int i = 0; i < mat.n_row * mat.n_col; i++){
+        this->data[i] = mat.data[i];
+    }
+    return *this;
+}
+
+template <typename T>
+Matrix<T>& Matrix<T>::operator= (const T* data){
+    for(int i = 0; i < this->n_row * this->n_col; i++){
+        this->data[i] = data[i];
     }
     return *this;
 }
@@ -262,119 +345,69 @@ void Matrix<T>::transpose(){
             new_data[j*this->n_row + i] = this->get(i,j);
         }
     }
-    delete [] this->data;
+    this->deallocate();
     this->data = new_data;
     std::swap(this->n_row, this->n_col);
     return;
 }
 
 template <typename T> 
-Matrix<T>* Matrix<T>::deep_copy() const {
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
-    new_matrix->data = deep_copy(this->data, this->n_row * this->n_col);
-    return new_matrix;
+Matrix<T> Matrix<T>::deep_copy() const {
+    Matrix<T> new_mat(this->n_row, this->n_col);
+    new_mat.data = deep_copy(this->data, this->n_row * this->n_col);
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::mul(const Matrix<T>& matrix){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
+Matrix<T> Matrix<T>::mul(const Matrix<T>& mat){
+    Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] * matrix.data[i];
+        new_mat.data[i] = this->data[i] * mat.data[i];
     }
-    return *new_matrix;
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::div(const Matrix<T>& matrix){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
+Matrix<T> Matrix<T>::div(const Matrix<T>& mat){
+    Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] / matrix.data[i];
+        assert(mat.data[i] != 0);
+        new_mat.data[i] = this->data[i] / mat.data[i];
     }
-    return *new_matrix;
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::operator+ (const Matrix<T>& matrix){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
+Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat){
+    Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] + matrix.data[i];
+        new_mat.data[i] = this->data[i] + mat.data[i];
     }
-    return *new_matrix;
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::operator- (const Matrix<T>& matrix){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
+Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat){
+    Matrix<T>* new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] - matrix.data[i];
+        new_mat.data[i] = this->data[i] - mat.data[i];
     }
-    return *new_matrix;
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::mul(const T value){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
-    for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] * value;
-    }
-    return *new_matrix;
-}
-
-template <typename T>
-Matrix<T>& Matrix<T>::div(const T value){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
-    for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] / value;
-    }
-    return *new_matrix;
-}
-
-template <typename T>
-Matrix<T>& Matrix<T>::operator+ (const T value){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
-    for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] + value;
-    }
-    return *new_matrix;
-}
-
-template <typename T>
-Matrix<T>& Matrix<T>::operator- (const T value){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
-    for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] - value;
-    }
-    return *new_matrix;
-}
-
-template <typename T>
-Matrix<T>& Matrix<T>::operator* (const T value){
-    Matrix<T>* new_matrix = new Matrix<T>(this->n_row, this->n_col);
-    for(int i = 0; i < this->n_row * this->n_col; i++){
-        new_matrix->data[i] = this->data[i] * value;
-    }
-    return *new_matrix;
-}
-
-template <typename T>
-Matrix<T>& Matrix<T>::operator* (const Matrix<T>& matrix){
-    if(this->n_col != matrix.n_row){
-        std::cout << "Dimension error" << std::endl;
-        exit(EXIT_FAILURE);    
-    }
-
-    Matrix<T>* output = new Matrix<T>(this->n_row, matrix.n_col);
+Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat){
+    assert(this->n_col == mat.n_row);
+    Matrix<T> output(this->n_row, mat.n_col);
     for(int i = 0; i < this->n_row; i++){
-        for(int j = 0; j < matrix.n_col; j++){
-            Matrix<T>* mat1 = this->get(i,i,0,this->n_col-1);
-            Matrix<T>* mat2 = matrix.get(0,matrix.n_row-1,j,j);
-            output->data[output->get_index(i,j)] 
-                = Basic::dot(mat1->data, mat2->data, this->n_col);
-            delete mat1;
-            delete mat2;
+        for(int j = 0; j < mat.n_col; j++){
+            Matrix<T> mat1 = this->get(i,i,0,this->n_col-1);
+            Matrix<T> mat2 = mat.get(0,mat.n_row-1,j,j);
+            output.data[output.get_index(i,j)] 
+                = Basic::dot(mat1.data, mat2.data, this->n_col);
         }
     }
-    return *output;
+    return output;
 }
 
 template <typename T>
@@ -410,12 +443,12 @@ bool Matrix<T>::is_symmetric(){
 }
 
 template <typename T>
-bool Matrix<T>::operator== (const Matrix& matrix){
-    if(this->n_col != matrix.n_col || this->n_row != matrix.n_row){
+bool Matrix<T>::operator== (const Matrix& mat){
+    if(this->n_col != mat.n_col || this->n_row != mat.n_row){
         return false;
     }
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        if(this->data[i] == matrix.data[i]){
+        if(this->data[i] == mat.data[i]){
             continue;
         } else {
             return false;
@@ -442,26 +475,93 @@ void Matrix<T>::write_mat(const std::string& filepath){
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::to_int(){
-    Matrix<int>* new_matrix = new Matrix<int>(this->n_row, this->n_col);
-    new_matrix->data = Basic::to_int(this->data, this->n_row * this->n_col);
-    return *new_matrix;
+Matrix<int> Matrix<T>::to_int(){
+    Matrix<int> new_mat(this->n_row, this->n_col);
+    new_mat.set(Basic::to_int(this->data, this->n_row * this->n_col));
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::to_double(){
-    Matrix<double>* new_matrix = new Matrix<double>(this->n_row, this->n_col);
-    new_matrix->data = Basic::to_double(this->data, this->n_row * this->n_col);
-    return *new_matrix;
+Matrix<double> Matrix<T>::to_double(){
+    Matrix<double> new_mat(this->n_row, this->n_col);
+    new_mat.set(Basic::to_double(this->data, this->n_row * this->n_col));
+    return new_mat;
 }
 
 template <typename T>
-Matrix<T>& Matrix<T>::to_float(){
-    Matrix<float>* new_matrix = new Matrix<float>(this->n_row, this->n_col);
-    new_matrix->data = Basic::to_float(this->data, this->n_row * this->n_col);
-    return *new_matrix;
+Matrix<float> Matrix<T>::to_float(){
+    Matrix<float> new_mat(this->n_row, this->n_col);
+    new_mat.set(Basic::to_float(this->data, this->n_row * this->n_col));
+    return new_mat;
 }
 
+// -----------------------------------------------------------------------------
+// Non-Member Functions
+// -----------------------------------------------------------------------------
+template <typename T>
+Matrix<T> operator+ (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, mat.get(i) + value); 
+    }
+    return mat;
+}
 
+template <typename T>
+Matrix<T> operator+ (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, mat.get(i) + value); 
+    }
+    return mat;
+}
+
+template <typename T>
+Matrix<T> operator- (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, mat.get(i) - value); 
+    }
+    return mat;
+}
+
+template <typename T>
+Matrix<T> operator- (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, mat.get(i) - value); 
+    }
+    return mat;
+}
+
+template <typename T>
+Matrix<T> operator* (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, mat.get(i) * value); 
+    }
+    return mat;
+}
+
+template <typename T>
+Matrix<T> operator* (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, mat.get(i) * value); 
+    }
+    return mat;
+}
+
+template <typename T>
+Matrix<T> operator/ (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        assert(value != 0);
+        mat.set(i, mat.get(i) / value); 
+    }
+    return mat;
+}
+
+template <typename T>
+Matrix<T> operator/ (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        assert(value != 0);
+        mat.set(i, mat.get(i) / value); 
+    }
+    return mat;
+}
 
 #endif

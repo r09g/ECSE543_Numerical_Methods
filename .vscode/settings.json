@@ -42,6 +42,7 @@
         "iosfwd": "cpp",
         "limits": "cpp",
         "stdexcept": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "ctime": "cpp"
     }
 }
