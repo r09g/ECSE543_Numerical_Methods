@@ -35,10 +35,16 @@ void test(){
 int main(){
 
     srand(time(NULL));
-
     clock_t start = clock();
 
-    test();
+
+
+
+    Matrix<int> a = Matrix<int>::identity_mat(10);
+    a.show();
+
+
+
 
     double duration = (clock() - start) / (double)(CLOCKS_PER_SEC);
     cout << "Executed in " << duration << "s" << endl;

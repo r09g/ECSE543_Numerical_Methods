@@ -32,6 +32,7 @@ class Matrix {
     public:
         // constructors
         Matrix();
+        Matrix(int n);
         Matrix(int n_row, int n_col);
         Matrix(int n_row, int n_col, const T* data);
         Matrix(const Matrix<T>& mat);
@@ -41,6 +42,11 @@ class Matrix {
         
         // row, col to index conversion
         int get_index(int row, int col) const;
+
+        // create special matrices
+        static Matrix<T> zero_mat(int n);
+        static Matrix<T> zero_mat(int n_row, int n_col);
+        static Matrix<T> identity_mat(int n);
 
         // getters and setters
         T* get() const;
@@ -85,7 +91,7 @@ class Matrix {
         Matrix<float> to_float();
 
         // I/O to Excel
-        static Matrix<double>& read_mat(const std::string& filepath);
+        static Matrix<T>& read_mat(const std::string& filepath);
         void write_mat(const std::string& filepath);
 
         // destructor
@@ -108,7 +114,7 @@ T* Matrix<T>::deep_copy(const T* data, unsigned int length){
 
 /*  reads and returns the matrix from a csv  */
 template <typename T>
-Matrix<double>& Matrix<T>::read_mat(const std::string& filepath){
+Matrix<T>& Matrix<T>::read_mat(const std::string& filepath){
     
     std::ifstream file;
     file.open(filepath);
@@ -122,7 +128,7 @@ Matrix<double>& Matrix<T>::read_mat(const std::string& filepath){
     getline(ss, output, ',');
     n_col = stoi(output);  
     
-    Matrix<double>* new_matrix = new Matrix<double>(n_row, n_col);
+    Matrix<T>* new_matrix = new Matrix<T>(n_row, n_col);
     int row = 0;
     int col = 0;
     while(getline(file,line)){
@@ -138,9 +144,38 @@ Matrix<double>& Matrix<T>::read_mat(const std::string& filepath){
     return *new_matrix;
 }
 
+/*  creates a square zero matrix of size n  */
+template <typename T>
+Matrix<T> Matrix<T>::zero_mat(int n){
+    return Matrix<T>(n);
+}
+
+/*  creates a square zero matrix of shape (n_row, n_col)  */
+template <typename T>
+Matrix<T> Matrix<T>::zero_mat(int n_row, int n_col){
+    return Matrix<T>(n_row, n_col);
+}
+
+/*  creates an identity matrix of size n  */
+template <typename T>
+Matrix<T> Matrix<T>::identity_mat(int n){
+    Matrix<T> mat(n);
+    for(int i = 0; i < n; i++){
+        mat.set(i,i,1);
+    }
+    return mat;
+}
+
 // -----------------------------------------------------------------------------
 // Constructors  & Destructor
 // -----------------------------------------------------------------------------
+
+/*  creates a square matrix of zeros with size n  */
+template <typename T>
+Matrix<T>::Matrix(int n): n_row(n), n_col(n) {
+    this->data = allocate(n, n);
+    return;
+}
 
 /*  creates an empty matrix  */
 template <typename T>
@@ -193,11 +228,13 @@ Matrix<T>::~Matrix(){
 template <typename T>
 T* Matrix<T>::allocate(int n_row, int n_col){
     T* new_data = NULL;
-    try{
-        new_data = new T[this->n_row * this->n_col]();
-    } catch(std::bad_alloc& e){
-        std::cout << e.what() << std::endl;
-        exit(EXIT_FAILURE);
+    if(this->n_row != 0 && this->n_col != 0){
+        try{
+            new_data = new T[this->n_row * this->n_col]();
+        } catch(std::bad_alloc& e){
+            std::cout << e.what() << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     // std::cout << "created" << std::endl;
     return new_data;
