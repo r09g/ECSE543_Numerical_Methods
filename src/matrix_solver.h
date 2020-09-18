@@ -1,12 +1,12 @@
 /******************************************************************************/
-/* Name: choleski_solver.h                                                    */
+/* Name: matrix_solver.h                                                    */
 /* Description: functions for assignment 1 of ECSE 543 Numerical Methods      */
 /* Date: 2020/09/10                                                           */
 /* Author: Raymond Yang                                                       */
 /******************************************************************************/
 
-#ifndef __CHOLESKI_SOLVER__
-#define __CHOLESKI_SOLVER__
+#ifndef __MATRIX_SOLVER__
+#define __MATRIX_SOLVER__
 
 #include <iostream>
 #include <cmath>

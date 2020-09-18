@@ -9,7 +9,7 @@
 #define __LRN__
 
 #include "Matrix.h"
-#include "choleski_solver.h" 
+#include "matrix_solver.h" 
 
 template <typename T>
 class LRN {

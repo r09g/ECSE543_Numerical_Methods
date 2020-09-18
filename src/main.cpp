@@ -12,7 +12,7 @@
 #include <time.h>
 #include "Matrix.h"
 #include "Basic.h"
-#include "choleski_solver.h"
+#include "matrix_solver.h"
 #include "LRN.h"
 
 using namespace std;
