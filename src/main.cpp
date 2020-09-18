@@ -45,9 +45,17 @@ int main(){
     clock_t start = clock();
 
     try{
-        LRN<double> circuit("./data/A1Q1d_test_circuit_5.csv");
+        // LRN<double> circuit("./data/A1Q1d_test_circuit_5.csv");
+        double circ[] = {
+            1,0,0,20,-10,
+            1,2,0,10,0,
+            1,3,0,10,0,
+            2,3,0,30,0,
+            2,0,0,30,0,
+            3,0,0,30,0
+        };
+        LRN<double> circuit(4,6,circ);
         circuit.choleski_solve();
-        
         circuit.get_v().show();
     }catch(const char* msg){
         cout << msg << endl;

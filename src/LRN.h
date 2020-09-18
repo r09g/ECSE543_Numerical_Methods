@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* Name: LRN.h                                                              */
 /* Description: Linear Resistive Network                                      */
-/* Date: 2020/09/10                                                           */
+/* Date: 2020/09/17                                                           */
 /* Author: Raymond Yang                                                       */
 /******************************************************************************/
 
@@ -14,15 +14,17 @@
 template <typename T>
 class LRN {
     private:
-        Matrix<T> A_;
-        Matrix<T> J_;
-        Matrix<T> R_;
-        Matrix<T> E_;
-        Matrix<T> v_;
-        Matrix<T> i_;
+        Matrix<T> A_;   // reduced incidence matrix
+        Matrix<T> J_;   // current source vector
+        Matrix<T> R_;   // resistance vector
+        Matrix<T> E_;   // voltage source vector
+        Matrix<T> v_;   // node voltages
+        Matrix<T> i_;   // branch currents
 
     public:
+        LRN();
         LRN(const std::string& filepath);
+        LRN(int n_nodes, int n_branches, T* data);
         ~LRN();
 
         // Getters
@@ -42,9 +44,20 @@ class LRN {
 // Constructor & Destructor
 // -----------------------------------------------------------------------------
 
+/*  Default constructor  */
+template <typename T>
+LRN<T>::LRN(){}
+
 /*  
     Create a LRN from .csv description  
     
+    A, J, R, E: Pass by reference these matrices to receive output
+    filepath: string filepath
+    &A: reduced incidence matrix
+    &J: I source vector
+    &R: R vector
+    &E: B source vector
+
     .csv format:
     #nodes, #branches
     N+, N-, J, R, E
@@ -65,14 +78,7 @@ class LRN {
     KVL: (I + i_k)*R - V = v_k   
 
     GND node number must be 0
-    I flowing out is +; I flowing in is -
-
-    A, J, R, E: Pass by reference these matrices to receive output
-    filepath: string filepath
-    &A: reduced incidence matrix
-    &J: I source vector
-    &R: R vector
-    &E: B source vector    
+    I flowing out is +; I flowing in is -    
 */
 template <typename T>
 LRN<T>::LRN(const std::string& filepath){
@@ -113,6 +119,26 @@ LRN<T>::LRN(const std::string& filepath){
     this->A_ = this->A_.get(1, n_nodes - 1, 0, n_branches - 1);
 
     file.close();
+    return;
+}
+
+/*  Specify circuit in array  */
+template <typename T>
+LRN<T>::LRN(int n_nodes, int n_branches, T* data){
+    this->A_ = Matrix<T>(n_nodes, n_branches);
+    this->J_ = Matrix<T>(n_branches, 1);
+    this->R_ = Matrix<T>(n_branches, 1);
+    this->E_ = Matrix<T>(n_branches, 1);
+
+    for(int i = 0; i < n_branches; i++){
+        this->A_.set(data[5*i + 0], i, 1);
+        this->A_.set(data[5*i + 1], i, -1);
+        this->J_.set(i, data[5*i + 2]);
+        this->R_.set(i, data[5*i + 3]);
+        this->E_.set(i, data[5*i + 4]);
+    }
+    this->A_ = this->A_.get(1, n_nodes - 1, 0, n_branches - 1);
+    
     return;
 }
 
