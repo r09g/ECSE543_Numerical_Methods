@@ -10,8 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <cassert>
 #include <new>
+#include <cstdlib>
 #include "Basic.h"
 
 template <typename T>
@@ -47,6 +47,9 @@ class Matrix {
         static Matrix<T> zero_mat(int n);
         static Matrix<T> zero_mat(int n_row, int n_col);
         static Matrix<T> identity_mat(int n);
+        static Matrix<T> rand_mat(int n);
+        static Matrix<T> rand_mat(int n_row, int n_col);
+        static Matrix<T> SSPD_mat(int n);
 
         // getters and setters
         T* get() const;
@@ -97,6 +100,22 @@ class Matrix {
         // destructor
         ~Matrix();
 };
+
+// -----------------------------------------------------------------------------
+// Dummy Namespace
+// -----------------------------------------------------------------------------
+
+/*  Used for calling non-member functions over member functions  */
+namespace Matrix_Dummy{
+
+    /*  creates a matrix containing the transpose of mat  */
+    template <typename T>
+    Matrix<T> transpose(Matrix<T> mat){
+        mat.transpose();
+        return mat;
+    }
+
+}
 
 // -----------------------------------------------------------------------------
 // Static Member-Functions
@@ -162,6 +181,47 @@ Matrix<T> Matrix<T>::identity_mat(int n){
     Matrix<T> mat(n);
     for(int i = 0; i < n; i++){
         mat.set(i,i,1);
+    }
+    return mat;
+}
+
+/*  creates a random square matrix of shape (n, n); values range in [0,n^2]  */
+template <typename T>
+Matrix<T> Matrix<T>::rand_mat(int n){
+    Matrix<T> mat(n);
+    for(int i = 0; i < n*n; i++){
+        mat.set(i,rand() % (n*n + 1));
+    }
+    return mat;
+}
+
+/*  creates a random matrix of shape (n_row, n_col); values range in [0,n^2]  */
+template <typename T>
+Matrix<T> Matrix<T>::rand_mat(int n_row, int n_col){
+    Matrix<T> mat(n_row, n_col);
+    for(int i = 0; i < n_row*n_col; i++){
+        mat.set(i,rand() % (n_row*n_col + 1));
+    }
+    return mat;
+}
+
+/*  
+    creates an square, symmetric, and positive definite matrix of shape (n, n)
+*/
+template <typename T>
+Matrix<T> Matrix<T>::SSPD_mat(int n){
+    Matrix<T> mat = Matrix<T>::rand_mat(n);
+    mat = mat + Matrix_Dummy::transpose(mat);
+    for(int diag = 0; diag < n; diag++){
+        int row_sum = 0;
+        int col_sum = 0;
+        for(int i = 0; i < n; i++){
+            row_sum += mat.get(diag, i);
+            col_sum += mat.get(i, diag);
+        }
+        row_sum -= mat.get(diag, diag);
+        col_sum -= mat.get(diag, diag);
+        mat.set(diag, diag, std::max(row_sum, col_sum) + 1);
     }
     return mat;
 }
@@ -444,7 +504,9 @@ template <typename T>
 Matrix<T> Matrix<T>::div(const Matrix<T>& mat){
     Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        assert(mat.data[i] != 0);
+        if(mat.data[i] == 0){
+            throw "Matrix::div ERROR: Divide by zero";
+        }
         new_mat.data[i] = this->data[i] / mat.data[i];
     }
     return new_mat;
@@ -463,7 +525,7 @@ Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat){
 /*  element-wise subtraction  */
 template <typename T>
 Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat){
-    Matrix<T>* new_mat(this->n_row, this->n_col);
+    Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
         new_mat.data[i] = this->data[i] - mat.data[i];
     }
@@ -473,7 +535,9 @@ Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat){
 /*  matrix multiplication  */
 template <typename T>
 Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat){
-    assert(this->n_col == mat.n_row);
+    if(this->n_col != mat.n_row){
+        throw "Matrix::operator* ERROR: Dimension error";
+    }
     Matrix<T> output(this->n_row, mat.n_col);
     for(int i = 0; i < this->n_row; i++){
         for(int j = 0; j < mat.n_col; j++){
@@ -642,7 +706,9 @@ Matrix<T> operator* (T value, Matrix<T> mat){
 template <typename T>
 Matrix<T> operator/ (T value, Matrix<T> mat){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
-        assert(value != 0);
+        if(value == 0){
+            throw "Matrix::operator/ ERROR: Division by zero";
+        }
         mat.set(i, mat.get(i) / value); 
     }
     return mat;
@@ -652,9 +718,18 @@ Matrix<T> operator/ (T value, Matrix<T> mat){
 template <typename T>
 Matrix<T> operator/ (Matrix<T> mat, T value){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
-        assert(value != 0);
+        if(value == 0){
+            throw "Matrix::operator/ ERROR: Division by zero";
+        }
         mat.set(i, mat.get(i) / value); 
     }
+    return mat;
+}
+
+/*  creates a matrix containing the transpose of mat  */
+template <typename T>
+Matrix<T> transpose(Matrix<T> mat){
+    mat.transpose();
     return mat;
 }
 

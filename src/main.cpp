@@ -12,42 +12,50 @@
 #include <time.h>
 #include "Matrix.h"
 #include "Basic.h"
+#include "choleski_solver.h"
+#include "LRN.h"
 
 using namespace std;
 
-void test(){
-    int num = 1000000;
-    int* arr1 = new int[num];
-    for(int i = 0; i < num; i++){
-        arr1[i] = rand() % 100 - 50;
+int FLAG = 0;
+
+void Q1(){
+
+    Matrix<double> A = Matrix<double>::SSPD_mat(10);
+    double x1[] = {1,2,3,4,5,6,7,8,9,10};
+    Matrix<double> x(10,1,x1);
+    Matrix<double> b = A*x; 
+
+    solve_choleski(&A, &b);
+
+    for(int i = 0; i < 10; i++){
+        if(std::abs(b.get(i) - x1[i]) > 1e-10){
+            cout << b.get(i) << " _ " << x1[i] << endl;
+        }
     }
 
-    Matrix<int> mat1 = Matrix<int>(1000,1000,arr1);
-    mat1.write_mat("test.csv");
+    b.show();
 
-    Matrix<double> mat2 = (Matrix<double>::read_mat("test.csv"));
-    Matrix<int> mat3 = mat2.to_int();
-    
-    delete [] arr1;
     return;
 }
 
 int main(){
-
+    cout << endl;
     srand(time(NULL));
     clock_t start = clock();
 
+    try{
+        LRN<double> circuit("./data/A1Q1d_test_circuit_5.csv");
+        circuit.choleski_solve();
+        
+        circuit.get_v().show();
+    }catch(const char* msg){
+        cout << msg << endl;
+    }
 
-
-
-    Matrix<int> a = Matrix<int>::identity_mat(10);
-    a.show();
-
-
-
+    cout << "\nERROR FLAG: " << FLAG << endl;
 
     double duration = (clock() - start) / (double)(CLOCKS_PER_SEC);
     cout << "Executed in " << duration << "s" << endl;
-
     return 0;
 }
