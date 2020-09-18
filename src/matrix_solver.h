@@ -1,5 +1,5 @@
 /******************************************************************************/
-/* Name: matrix_solver.h                                                    */
+/* Name: matrix_solver.h                                                      */
 /* Description: functions for assignment 1 of ECSE 543 Numerical Methods      */
 /* Date: 2020/09/10                                                           */
 /* Author: Raymond Yang                                                       */
