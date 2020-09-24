@@ -26,7 +26,7 @@ void Q1(){
     Matrix<double> x(10,1,x1);
     Matrix<double> b = A*x; 
 
-    solve_choleski(&A, &b);
+    Matrix_Solver::choleski_solve(&A, &b);
 
     for(int i = 0; i < 10; i++){
         if(std::abs(b.get(i) - x1[i]) > 1e-10){

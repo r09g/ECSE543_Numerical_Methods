@@ -15,6 +15,8 @@
 
 extern int FLAG;
 
+namespace Matrix_Solver{
+
 /*  
     Choleski Decomposition
 
@@ -206,7 +208,7 @@ void back_substitution(Matrix<T>& U, Matrix<T>* y){
     *x: unknown vector
 */
 template <typename T>
-void solve_choleski(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
+void choleski_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
     elimination(&A, &b);
     A.transpose();
     back_substitution(A, &b);
@@ -216,7 +218,7 @@ void solve_choleski(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
 
 /*  In-place computation version of solve_choleski  */
 template <typename T>
-void solve_choleski(Matrix<T>* A, Matrix<T>* b){
+void choleski_solve(Matrix<T>* A, Matrix<T>* b){
     elimination(A, b);
     A->transpose();
     back_substitution(*A, b);
@@ -231,6 +233,9 @@ void solve_choleski(Matrix<T>* A, Matrix<T>* b){
     n: matrix dimension (n, n)
     Returns: matrix
 */
+
+}
+
 
 #endif
 

@@ -1,5 +1,5 @@
 /******************************************************************************/
-/* Name: LRN.h                                                              */
+/* Name: LRN.h                                                                */
 /* Description: Linear Resistive Network                                      */
 /* Date: 2020/09/17                                                           */
 /* Author: Raymond Yang                                                       */
@@ -160,7 +160,7 @@ void LRN<T>::choleski_solve(){
 
     Matrix<T> A = this->A_*Y*transpose(this->A_);
     Matrix<T> b = this->A_*(this->J_ - Y*this->E_);
-    solve_choleski(&A, &b);
+    Matrix_Solver::choleski_solve(&A, &b);
     
     this->v_ = b;
     this->i_ = Y*(transpose(this->A_)*this->v_) + Y*this->E_ - this->J_;
