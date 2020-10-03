@@ -18,20 +18,20 @@ extern int FLAG;
 namespace Matrix_Solver{
 
 /*  
-    Choleski Decomposition
+    Cholesky Decomposition
 
     Formula: A = L*L'; solves for L
     A: square, symmetric, and positive definite matrix
     *L: decomposed lower triangular matrix
 */
 template <typename T> 
-void choleski(Matrix<T> A, Matrix<T>* L){
+void cholesky(Matrix<T> A, Matrix<T>* L){
     int row = A.get_n_row();
     int col = A.get_n_col();
     for(int j = 0; j < row; j++){
         if(A.get(j, j) <= 0){
             FLAG -= 1;
-            throw "choleski Error: A is not P.D.";
+            throw "cholesky Error: A is not P.D.";
         }
         L->set(j, j, sqrt(A.get(j, j)));
         for(int i = j + 1; i < row; i++){
@@ -44,15 +44,15 @@ void choleski(Matrix<T> A, Matrix<T>* L){
     return;
 }
 
-/*  In-place computation version of choleski function  */
+/*  In-place computation version of cholesky function  */
 template <typename T> 
-void choleski(Matrix<T>* A){
+void cholesky(Matrix<T>* A){
     int row = A->get_n_row();
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
         if(A->get(j, j) <= 0){
             FLAG -= 1;
-            throw "choleski Error: A is not P.D.";
+            throw "cholesky Error: A is not P.D.";
         }
         A->set(j, j, sqrt(A->get(j, j)));
         for(int i = j + 1; i < row; i++){
@@ -123,7 +123,7 @@ void elimination(Matrix<T> A, Matrix<T> b, Matrix<T>* L, Matrix<T>* y){
     for(int j = 0; j < row; j++){
         if(A.get(j, j) <= 0){
             FLAG -= 1;
-            throw "choleski Error: A is not P.D.";
+            throw "cholesky Error: A is not P.D.";
         }
         L->set(j, j, sqrt(A.get(j, j)));
         y->set(j, y->get(j)/L->get(j, j));
@@ -146,7 +146,7 @@ void elimination(Matrix<T>* A, Matrix<T>* b){
     for(int j = 0; j < row; j++){
         if(A->get(j, j) <= 0){
             FLAG -= 1;
-            throw "choleski Error: A is not P.D.";
+            throw "cholesky Error: A is not P.D.";
         }
         A->set(j, j, sqrt(A->get(j, j)));
         b->set(j, b->get(j)/A->get(j, j));
@@ -201,14 +201,14 @@ void back_substitution(Matrix<T>& U, Matrix<T>* y){
 }
 
 /*  
-    Solve Ax = b using Choleski Decomposition 
+    Solve Ax = b using Cholesky Decomposition 
 
     A: square, symmetric, P.D.
     b: output vector
     *x: unknown vector
 */
 template <typename T>
-void choleski_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
+void cholesky_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
     elimination(&A, &b);
     A.transpose();
     back_substitution(A, &b);
@@ -216,14 +216,30 @@ void choleski_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
     return;
 }
 
-/*  In-place computation version of solve_choleski  */
+/*  In-place computation version of solve_cholesky  */
 template <typename T>
-void choleski_solve(Matrix<T>* A, Matrix<T>* b){
+void cholesky_solve(Matrix<T>* A, Matrix<T>* b){
     elimination(A, b);
     A->transpose();
     back_substitution(*A, b);
     return;
 }
+
+/*  
+    Solve Ax = b using Banded Cholesky Decomposition (In-Place)
+
+    *A: square, symmetric, P.D.
+    *b: output vector
+    HBW: half bandwidth. Will automatically determine if not provided.
+*/
+template <typename T>
+void cholesky_solve_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1){
+    elimination_banded(A, b, HBW);
+    A->transpose();
+    back_substitution(*A, b);
+    return;
+}
+
 
 /*  
     Create square symmetric P.D. matrix 
@@ -234,6 +250,104 @@ void choleski_solve(Matrix<T>* A, Matrix<T>* b){
     Returns: matrix
 */
 
+}
+
+// TODO
+template <typename T>
+int find_HBW(Matrix<T>* A){
+    int num_row = A->get_n_row();
+    int HBW = 0;
+    for(int i = 0; i < num_row; i++){
+        int j = num_row - 1;
+        while(j >= i){
+            if(A->get(i, j) == 0){
+                j--;
+            } else {
+                break;
+            }
+        }
+        HBW = std::max(HBW, j - i + 1);
+    }
+    return HBW;
+}
+
+
+/*    
+    Banded Cholesky Decomposition (In-Place)
+
+    Formula: A = L*L'; solves for L
+    *A: square, symmetric, and positive definite matrix
+    HBW: half bandwidth. Will automatically determine if not provided.
+*/
+template <typename T> 
+void cholesky_banded(Matrix<T>* A, int HBW=-1){
+    if(HBW == -1){
+        HBW = find_HBW(A);
+    }
+    int row = A->get_n_row();
+    int col = A->get_n_col();
+    for(int j = 0; j < row; j++){
+        if(A->get(j, j) <= 0){
+            FLAG -= 1;
+            throw "cholesky Error: A is not P.D.";
+        }
+        A->set(j, j, sqrt(A->get(j, j)));
+        for(int i = j + 1; i < std::min(row, j + HBW); i++){
+            A->set(i, j, A->get(i, j)/A->get(j, j));
+            for(int k = j + 1; k <= i; k++){
+                A->set(i, k, A->get(i, k) - A->get(i, j)*A->get(k, j));
+            }
+        }
+    }
+    // set upper right (excluding diagonal) to 0
+    for(int j = 1; j < row; j++){
+        for(int i = 0; i < j; i++){
+            A->set(i, j, 0);
+        }
+    }
+    return;
+}
+
+/*  
+    Elimination (In-Place)
+
+    Banded Cholesky decomposition and forward elimination combined
+
+    Formula: A*x = b -> L*y = b; solves for L and y
+    *A: square, symmetric, P.D. 
+    *b: output vector
+    HBW: half bandwidth. Will automatically determine if not provided.
+*/
+template <typename T>
+void elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1){
+    if(HBW == -1){
+        HBW = find_HBW(A);
+    }
+    int row = A->get_n_row();
+    int col = A->get_n_col();
+    for(int j = 0; j < row; j++){
+        if(A->get(j, j) <= 0){
+            FLAG -= 1;
+            throw "cholesky Error: A is not P.D.";
+        }
+        A->set(j, j, sqrt(A->get(j, j)));
+        b->set(j, b->get(j)/A->get(j, j));
+        for(int i = j + 1; i < std::min(row, j + HBW); i++){
+            A->set(i, j, A->get(i, j)/A->get(j, j));
+            b->set(i, b->get(i) - A->get(i, j) * b->get(j));
+            for(int k = j + 1; k <= i; k++){
+                A->set(i, k, A->get(i, k) - A->get(i, j)*A->get(k, j));
+            }
+        }
+    }
+
+    // set upper right (excluding diagonal) to 0
+    for(int j = 1; j < row; j++){
+        for(int i = 0; i < j; i++){
+            A->set(i, j, 0);
+        }
+    }
+    return;
 }
 
 
