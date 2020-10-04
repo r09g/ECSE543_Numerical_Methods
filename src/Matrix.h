@@ -12,9 +12,10 @@
 #include <sstream>
 #include <new>
 #include <cstdlib>
+#include <type_traits>
 #include "Basic.h"
 
-template <typename T>
+template <class T = double>
 class Matrix {
     private:
         // parameters
@@ -34,6 +35,7 @@ class Matrix {
         Matrix();
         Matrix(int n);
         Matrix(int n_row, int n_col);
+        Matrix(int n_row, int n_col, T val);
         Matrix(int n_row, int n_col, const T* data);
         Matrix(const Matrix<T>& mat);
 
@@ -56,11 +58,13 @@ class Matrix {
         void set(const T* data, unsigned int length);
         void set(T*&& data);
         T get(int row, int col) const;
+        T& get_ref(int row, int col);
         void set(int row, int col, T value);
         T get(int index);
         void set(int index, T value);
         Matrix<T> get(int row1, int row2, int col1, int col2) const;
-        void set(int row, int col, const Matrix<T>& mat);
+        void set(int row1, int row2, int col1, int col2, T value);
+        void set(int row, int col, const Matrix<T> mat);
         Matrix<T> get_row(int row) const;
         Matrix<T> get_col(int col) const;
         int get_n_row() const;
@@ -109,7 +113,7 @@ class Matrix {
 namespace Matrix_Dummy{
 
     /*  creates a matrix containing the transpose of mat  */
-    template <typename T>
+    template <class T>
     Matrix<T> transpose(Matrix<T> mat){
         mat.transpose();
         return mat;
@@ -122,7 +126,7 @@ namespace Matrix_Dummy{
 // -----------------------------------------------------------------------------
 
 /*  creates a deep copy of the array  */
-template <typename T>
+template <class T>
 T* Matrix<T>::deep_copy(const T* data, unsigned int length){
     T* new_data = new T[length]();
     for(int i = 0; i < length; i++){
@@ -132,7 +136,7 @@ T* Matrix<T>::deep_copy(const T* data, unsigned int length){
 }
 
 /*  reads and returns the matrix from a csv  */
-template <typename T>
+template <class T>
 Matrix<T>& Matrix<T>::read_mat(const std::string& filepath){
     
     std::ifstream file;
@@ -164,19 +168,19 @@ Matrix<T>& Matrix<T>::read_mat(const std::string& filepath){
 }
 
 /*  creates a square zero matrix of size n  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::zero_mat(int n){
     return Matrix<T>(n);
 }
 
 /*  creates a square zero matrix of shape (n_row, n_col)  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::zero_mat(int n_row, int n_col){
     return Matrix<T>(n_row, n_col);
 }
 
 /*  creates an identity matrix of size n  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::identity_mat(int n){
     Matrix<T> mat(n);
     for(int i = 0; i < n; i++){
@@ -186,7 +190,7 @@ Matrix<T> Matrix<T>::identity_mat(int n){
 }
 
 /*  creates a random square matrix of shape (n, n); values range in [0,n^2]  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::rand_mat(int n){
     Matrix<T> mat(n);
     for(int i = 0; i < n*n; i++){
@@ -196,7 +200,7 @@ Matrix<T> Matrix<T>::rand_mat(int n){
 }
 
 /*  creates a random matrix of shape (n_row, n_col); values range in [0,n^2]  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::rand_mat(int n_row, int n_col){
     Matrix<T> mat(n_row, n_col);
     for(int i = 0; i < n_row*n_col; i++){
@@ -208,7 +212,7 @@ Matrix<T> Matrix<T>::rand_mat(int n_row, int n_col){
 /*  
     creates an square, symmetric, and positive definite matrix of shape (n, n)
 */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::SSPD_mat(int n){
     Matrix<T> mat = Matrix<T>::rand_mat(n);
     mat = mat + Matrix_Dummy::transpose(mat);
@@ -231,29 +235,39 @@ Matrix<T> Matrix<T>::SSPD_mat(int n){
 // -----------------------------------------------------------------------------
 
 /*  creates a square matrix of zeros with size n  */
-template <typename T>
+template <class T>
 Matrix<T>::Matrix(int n): n_row(n), n_col(n) {
     this->data = allocate(n, n);
     return;
 }
 
 /*  creates an empty matrix  */
-template <typename T>
+template <class T>
 Matrix<T>::Matrix(): n_row(0), n_col(0) {
     this->data = allocate(n_row, n_col);
     return;
 }
 
 /*  creates a (n_row, n_col) matrix with elements initialized to 0  */
-template <typename T>
+template <class T>
 Matrix<T>::Matrix(int n_row, int n_col): n_row(n_row), n_col(n_col) {
     this->data = allocate(n_row, n_col);
     return;
 }
 
+/*  creates a (n_row, n_col) matrix with elements initialized to val  */
+template <class T>
+Matrix<T>::Matrix(int n_row, int n_col, T val): n_row(n_row), n_col(n_col) {
+    this->data = allocate(n_row, n_col);
+    for(int i = 0; i < n_row*n_col; i++){
+        this->data[i] = val;
+    }
+    return;
+}
+
 /*  creates a (n_row, n_col) matrix initialized to "data"
     values copied over  */
-template <typename T>
+template <class T>
 Matrix<T>::Matrix(int n_row, int n_col, const T* data){
     this->n_row = n_row;
     this->n_col = n_col;
@@ -265,14 +279,14 @@ Matrix<T>::Matrix(int n_row, int n_col, const T* data){
 }
 
 /*  copy constructor; returns deep copy of "mat"  */
-template <typename T>
+template <class T>
 Matrix<T>::Matrix(const Matrix<T>& mat): n_row(mat.n_row), n_col(mat.n_col){
     this->data = deep_copy(mat.data, this->n_row * this->n_col); 
     return;
 }
 
 /*  destructor; calls deallocate()  */
-template <typename T>
+template <class T>
 Matrix<T>::~Matrix(){
     this->deallocate();
     // std::cout << "deleted" << std::endl;
@@ -285,7 +299,7 @@ Matrix<T>::~Matrix(){
 
 /*  allocates memory for data array with n_row*n_col elements
     returns a pointer  */
-template <typename T>
+template <class T>
 T* Matrix<T>::allocate(int n_row, int n_col){
     T* new_data = NULL;
     if(this->n_row != 0 && this->n_col != 0){
@@ -301,7 +315,7 @@ T* Matrix<T>::allocate(int n_row, int n_col){
 }
 
 /*  deallocates memory assigned to data array  */
-template <typename T>
+template <class T>
 void Matrix<T>::deallocate(){
     delete [] this->data;
     this->data = NULL;
@@ -310,7 +324,7 @@ void Matrix<T>::deallocate(){
 }
 
 /*  prints a matrix in terminal  */
-template <typename T>
+template <class T>
 void Matrix<T>::show() const {
     if(this->n_row == 0 && this->n_col == 0){
         std::cout << "0 [ ]" << std::endl;
@@ -321,18 +335,18 @@ void Matrix<T>::show() const {
             std::cout << this->get(i,j) << ",";
         }
         std::cout << " ]" << std::endl;
-    }
+    }   
     return;
 }
 
 /*  get a pointer to a deep copy of the data array  */
-template <typename T>
+template <class T>
 T* Matrix<T>::get() const {
     return deep_copy(this->data, this->n_col*this->n_row);
 }
 
 /*  set a new data array to the Matrix by deep copy  */
-template <typename T>
+template <class T>
 void Matrix<T>::set(const T* data, unsigned int length){
     if(this->data != NULL){
         this->deallocate();
@@ -342,7 +356,7 @@ void Matrix<T>::set(const T* data, unsigned int length){
 }
 
 /*  set a new data array to the Matrix by move-semantics  */
-template <typename T>
+template <class T>
 void Matrix<T>::set(T*&& data){
     if(this->data != NULL){
         this->deallocate();
@@ -353,33 +367,39 @@ void Matrix<T>::set(T*&& data){
 }
 
 /*  get the (row, col) element from the Matrix  */
-template <typename T>
+template <class T>
 T Matrix<T>::get(int row, int col) const {
     return this->data[this->get_index(row,col)];
 }
 
+/*  get the reference to (row, col) element from the Matrix  */
+template <class T>
+T& Matrix<T>::get_ref(int row, int col){
+    return this->data[this->get_index(row,col)];
+}
+
 /*  set the (row, col) element to "value"  */
-template <typename T>
+template <class T>
 void Matrix<T>::set(int row, int col, T value){
     this->data[this->get_index(row,col)] = value;
     return;
 }
 
 /*  get the i-th element in the data array  */
-template <typename T>
+template <class T>
 T Matrix<T>::get(int index){
     return this->data[index];
 }
 
 /*  set the i-th element in the data array  */
-template <typename T>
+template <class T>
 void Matrix<T>::set(int index, T value){
     this->data[index] = value;
     return;
 }
 
 /*  get a copy of part of the matrix (row1:row2, col1:col2) */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::get(int row1, int row2, int col1, int col2) const {
     Matrix<T> new_mat(row2 - row1 + 1, col2 - col1 + 1);
     for(int i = 0; i < new_mat.n_row; i++){
@@ -391,9 +411,20 @@ Matrix<T> Matrix<T>::get(int row1, int row2, int col1, int col2) const {
     return new_mat;
 }
 
+/*  set the same value to part of the Matrix (row1:row2, col1:col2)  */
+template <class T>
+void Matrix<T>::set(int row1, int row2, int col1, int col2, T value){
+    for(int row = row1; row <= row2; row++){
+        for(int col = col1; col <= col2; col++){
+            this->set(row, col, value);
+        }
+    }
+    return;
+}
+
 /*  set part of the Matrix to "mat", starting at (row, col)  */
-template <typename T>
-void Matrix<T>::set(int row, int col, const Matrix<T>& mat){
+template <class T>
+void Matrix<T>::set(int row, int col, const Matrix<T> mat){
     for(int i = 0; i < mat.n_row; i++){
         for(int j = 0; j < mat.n_col; j++){
             this->data[this->get_index(row + i, col + j)]
@@ -404,7 +435,7 @@ void Matrix<T>::set(int row, int col, const Matrix<T>& mat){
 }
 
 /*  get the row at (row,:)  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::get_row(int row) const {
     Matrix<T> new_mat(1, this->n.col);
     for(int i = 0; i < this->n.col; i++){
@@ -414,7 +445,7 @@ Matrix<T> Matrix<T>::get_row(int row) const {
 }
 
 /*  get the column at (:, col)  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::get_col(int col) const {
     Matrix<T> new_mat(this->n.col, 1);
     for(int i = 0; i < this->n.row; i++){
@@ -424,26 +455,26 @@ Matrix<T> Matrix<T>::get_col(int col) const {
 }
 
 /*  convert (row, col) to index for data array  */
-template <typename T>
+template <class T>
 int Matrix<T>::get_index(int row, int col) const{
     return row*this->n_col + col;
 }
 
 /*  return the total number of rows  */
-template <typename T>
+template <class T>
 int Matrix<T>::get_n_row() const{
     return this->n_row;
 }
 
 /*  return the total number of columns  */
-template <typename T>
+template <class T>
 int Matrix<T>::get_n_col() const{
     return this->n_col;
 }
 
 /*  deallocate current data array in Matrix and assign data array with values
     from "mat"; returns self  */
-template <typename T>
+template <class T>
 Matrix<T>& Matrix<T>::operator= (const Matrix<T>& mat){
     this->n_col = mat.n_col;
     this->n_row = mat.n_row;
@@ -458,7 +489,7 @@ Matrix<T>& Matrix<T>::operator= (const Matrix<T>& mat){
 }
 
 /*  overwrite current data array with "data"; returns self  */
-template <typename T>
+template <class T>
 Matrix<T>& Matrix<T>::operator= (const T* data){
     for(int i = 0; i < this->n_row * this->n_col; i++){
         this->data[i] = data[i];
@@ -467,7 +498,7 @@ Matrix<T>& Matrix<T>::operator= (const T* data){
 }
 
 /*  converts Matrix to its transpose  */
-template <typename T>
+template <class T>
 void Matrix<T>::transpose(){
     T* new_data = new T[this->n_col * this->n_row]();
     for(int i = 0; i < this->n_row; i++){
@@ -482,7 +513,7 @@ void Matrix<T>::transpose(){
 }
 
 /*  creates a deep copy of the current Matrix  */
-template <typename T> 
+template <class T> 
 Matrix<T> Matrix<T>::deep_copy() const {
     Matrix<T> new_mat(this->n_row, this->n_col);
     new_mat.data = deep_copy(this->data, this->n_row * this->n_col);
@@ -490,7 +521,7 @@ Matrix<T> Matrix<T>::deep_copy() const {
 }
 
 /*  element-wise multiplication  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::mul(const Matrix<T>& mat){
     Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
@@ -500,7 +531,7 @@ Matrix<T> Matrix<T>::mul(const Matrix<T>& mat){
 }
 
 /*  element-wise division  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::div(const Matrix<T>& mat){
     Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
@@ -513,7 +544,7 @@ Matrix<T> Matrix<T>::div(const Matrix<T>& mat){
 }
 
 /*  element-wise addition  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat){
     Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
@@ -523,7 +554,7 @@ Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat){
 }
 
 /*  element-wise subtraction  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat){
     Matrix<T> new_mat(this->n_row, this->n_col);
     for(int i = 0; i < this->n_row * this->n_col; i++){
@@ -533,7 +564,7 @@ Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat){
 }
 
 /*  matrix multiplication  */
-template <typename T>
+template <class T>
 Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat){
     if(this->n_col != mat.n_row){
         throw "Matrix::operator* ERROR: Dimension error";
@@ -551,25 +582,25 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat){
 }
 
 /*  sum of all elements in matrix  */
-template <typename T>
+template <class T>
 T Matrix<T>::sum(){
     return Basic::sum(this->data,this->n_col * this->n_row);
 }
 
 /*  mean of all elements in matrix  */
-template <typename T>
+template <class T>
 T Matrix<T>::mean(){
     return Basic::mean(this->data,this->n_col * this->n_row);
 }
 
 /*  check if matrix is square; true -> square  */
-template <typename T>
+template <class T>
 bool Matrix<T>::is_square(){
     return this->n_col == this->n_row;
 }
 
 /*  check if matrix is symmetric; true -> symmetric  */
-template <typename T>
+template <class T>
 bool Matrix<T>::is_symmetric(){
     if(this->is_square() == false){
         return false;
@@ -587,7 +618,7 @@ bool Matrix<T>::is_symmetric(){
 }
 
 /*  check if two matrices are identical  */
-template <typename T>
+template <class T>
 bool Matrix<T>::operator== (const Matrix& mat){
     if(this->n_col != mat.n_col || this->n_row != mat.n_row){
         return false;
@@ -603,7 +634,7 @@ bool Matrix<T>::operator== (const Matrix& mat){
 }
 
 /*  write current matrix to csv file  */
-template <typename T>
+template <class T>
 void Matrix<T>::write_mat(const std::string& filepath){
     std::stringstream ss;
     std::ofstream file;
@@ -621,7 +652,7 @@ void Matrix<T>::write_mat(const std::string& filepath){
 }
 
 /*  convert all elements to int type  */
-template <typename T>
+template <class T>
 Matrix<int> Matrix<T>::to_int(){
     Matrix<int> new_mat(this->n_row, this->n_col);
     new_mat.set(Basic::to_int(this->data, this->n_row * this->n_col));
@@ -629,7 +660,7 @@ Matrix<int> Matrix<T>::to_int(){
 }
 
 /*  convert all elements to double type  */
-template <typename T>
+template <class T>
 Matrix<double> Matrix<T>::to_double(){
     Matrix<double> new_mat(this->n_row, this->n_col);
     new_mat.set(Basic::to_double(this->data, this->n_row * this->n_col));
@@ -637,7 +668,7 @@ Matrix<double> Matrix<T>::to_double(){
 }
 
 /*  convert all elements to float type  */
-template <typename T>
+template <class T>
 Matrix<float> Matrix<T>::to_float(){
     Matrix<float> new_mat(this->n_row, this->n_col);
     new_mat.set(Basic::to_float(this->data, this->n_row * this->n_col));
@@ -649,7 +680,7 @@ Matrix<float> Matrix<T>::to_float(){
 // -----------------------------------------------------------------------------
 
 /*  overload +: matrix + value  */
-template <typename T>
+template <class T>
 Matrix<T> operator+ (Matrix<T> mat, T value){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         mat.set(i, mat.get(i) + value); 
@@ -658,7 +689,7 @@ Matrix<T> operator+ (Matrix<T> mat, T value){
 }
 
 /*  overload +: value + matrix  */
-template <typename T>
+template <class T>
 Matrix<T> operator+ (T value, Matrix<T> mat){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         mat.set(i, mat.get(i) + value); 
@@ -667,7 +698,7 @@ Matrix<T> operator+ (T value, Matrix<T> mat){
 }
 
 /*  overload -: matrix - value  */
-template <typename T>
+template <class T>
 Matrix<T> operator- (Matrix<T> mat, T value){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         mat.set(i, mat.get(i) - value); 
@@ -676,7 +707,7 @@ Matrix<T> operator- (Matrix<T> mat, T value){
 }
 
 /*  overload -: value - matrix  */
-template <typename T>
+template <class T>
 Matrix<T> operator- (T value, Matrix<T> mat){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         mat.set(i, mat.get(i) - value); 
@@ -685,7 +716,7 @@ Matrix<T> operator- (T value, Matrix<T> mat){
 }
 
 /*  overload *: matrix * value  */
-template <typename T>
+template <class T>
 Matrix<T> operator* (Matrix<T> mat, T value){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         mat.set(i, mat.get(i) * value); 
@@ -694,7 +725,7 @@ Matrix<T> operator* (Matrix<T> mat, T value){
 }
 
 /*  overload *: value * matrix  */
-template <typename T>
+template <class T>
 Matrix<T> operator* (T value, Matrix<T> mat){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         mat.set(i, mat.get(i) * value); 
@@ -703,7 +734,7 @@ Matrix<T> operator* (T value, Matrix<T> mat){
 }
 
 /*  overload /: value / matrix  */
-template <typename T>
+template <class T>
 Matrix<T> operator/ (T value, Matrix<T> mat){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         if(value == 0){
@@ -715,7 +746,7 @@ Matrix<T> operator/ (T value, Matrix<T> mat){
 }
 
 /*  overload /: value / matrix  */
-template <typename T>
+template <class T>
 Matrix<T> operator/ (Matrix<T> mat, T value){
     for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
         if(value == 0){
@@ -727,7 +758,7 @@ Matrix<T> operator/ (Matrix<T> mat, T value){
 }
 
 /*  creates a matrix containing the transpose of mat  */
-template <typename T>
+template <class T>
 Matrix<T> transpose(Matrix<T> mat){
     mat.transpose();
     return mat;

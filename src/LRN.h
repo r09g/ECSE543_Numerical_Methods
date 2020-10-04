@@ -12,9 +12,7 @@
 #include "Matrix.h"
 #include "matrix_solver.h" 
 
-extern int FLAG;
-
-template <typename T>
+template <typename T = double>
 class LRN {
     private:
         Matrix<T> A_;   // reduced incidence matrix
@@ -109,7 +107,6 @@ LRN<T>::LRN(const std::string& filepath){
     getline(ss, output, ',');
     n_branches = stoi(output);
     if(n_nodes <  2 || n_branches < 2){
-        FLAG -= 1;
         throw "LRN::LRN ERROR: Too few nodes/branches"; 
     }  
     

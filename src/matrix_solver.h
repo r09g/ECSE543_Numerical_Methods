@@ -13,8 +13,6 @@
 #include <cstdlib>
 #include "Matrix.h"
 
-extern int FLAG;
-
 namespace Matrix_Solver{
 
 /*  
@@ -30,7 +28,6 @@ void cholesky(Matrix<T> A, Matrix<T>* L){
     int col = A.get_n_col();
     for(int j = 0; j < row; j++){
         if(A.get(j, j) <= 0){
-            FLAG -= 1;
             throw "cholesky Error: A is not P.D.";
         }
         L->set(j, j, sqrt(A.get(j, j)));
@@ -51,7 +48,6 @@ void cholesky(Matrix<T>* A){
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
         if(A->get(j, j) <= 0){
-            FLAG -= 1;
             throw "cholesky Error: A is not P.D.";
         }
         A->set(j, j, sqrt(A->get(j, j)));
@@ -122,7 +118,6 @@ void elimination(Matrix<T> A, Matrix<T> b, Matrix<T>* L, Matrix<T>* y){
     int col = A.get_n_col();
     for(int j = 0; j < row; j++){
         if(A.get(j, j) <= 0){
-            FLAG -= 1;
             throw "cholesky Error: A is not P.D.";
         }
         L->set(j, j, sqrt(A.get(j, j)));
@@ -145,7 +140,6 @@ void elimination(Matrix<T>* A, Matrix<T>* b){
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
         if(A->get(j, j) <= 0){
-            FLAG -= 1;
             throw "cholesky Error: A is not P.D.";
         }
         A->set(j, j, sqrt(A->get(j, j)));
@@ -288,7 +282,6 @@ void cholesky_banded(Matrix<T>* A, int HBW=-1){
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
         if(A->get(j, j) <= 0){
-            FLAG -= 1;
             throw "cholesky Error: A is not P.D.";
         }
         A->set(j, j, sqrt(A->get(j, j)));
@@ -327,7 +320,6 @@ void elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1){
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
         if(A->get(j, j) <= 0){
-            FLAG -= 1;
             throw "cholesky Error: A is not P.D.";
         }
         A->set(j, j, sqrt(A->get(j, j)));

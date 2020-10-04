@@ -13,6 +13,8 @@
 #include "Basic.h"
 #include "matrix_solver.h"
 #include "LRN.h"
+#include "FDM.h"
+
 
 #include "A1.cpp"
 
@@ -24,11 +26,12 @@ int main(){
     cout << endl;
     srand(time(NULL));
     clock_t tic = clock();
-    cout << "ECSE 543 Numerical Methods Assignment 1" << endl;
+    cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
 
     try{
-        A1 a1 = A1();
+        A1 a1 = A1(3);
     }catch(const char* msg){
+        FLAG -= 1;
         cout << msg << endl;
     }
 
@@ -36,6 +39,6 @@ int main(){
 
     clock_t toc = clock();
     double duration = (toc - tic) / (double)(CLOCKS_PER_SEC);
-    cout << "Executed in " << duration << "s" << endl;
-    return 0;
+    cout << "Executed in " << duration << "s" << endl << endl;
+    return EXIT_SUCCESS;
 }

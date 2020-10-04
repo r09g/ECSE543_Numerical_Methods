@@ -36,6 +36,18 @@ namespace Basic{
     template <typename T, size_t N> float* to_float(const T (&data)[N]);
     template <typename T> float* to_float(const T* data, unsigned int length);
     
+    // check if two objects have same class template
+    template <class T, class U>
+    struct same_template: std::is_same<T, U> {};
+    
+    template <template<class...> class T, class T1, class T2>
+    struct same_template<T<T1>, T<T2>> : std::true_type {};
+
+    template <class T, class U>
+    constexpr bool is_same_type(T, U){
+        return same_template<T, U>::value;
+    }
+
 };
 
 // -----------------------------------------------------------------------------

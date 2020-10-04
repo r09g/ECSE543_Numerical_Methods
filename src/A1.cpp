@@ -20,7 +20,7 @@ extern int FLAG;
 
 class A1{
     public:
-    A1();
+    A1(int question=-1);
 
     // Questions
     void Q1();
@@ -34,10 +34,23 @@ class A1{
 // -----------------------------------------------------------------------------
 
 /*  Executes all questions  */
-A1::A1(){
-    this->Q1();
-    this->Q2();
-    this->Q3();
+A1::A1(int question){
+    switch(question){
+        case 1:
+            this->Q1();
+            break;
+        case 2:
+            this->Q2();
+            break;
+        case 3:
+            this->Q3();
+            break;
+        default:
+            this->Q1();
+            this->Q2();
+            this->Q3();
+            break;
+    }
     return;
 }
 
@@ -163,7 +176,7 @@ void A1::Q2(){
     }
 
     cout << "Non-banded:" << endl;
-    cout << "a) The equivalent resistances are:" << endl;
+    cout << "a)\nThe equivalent resistances are:" << endl;
     req1.show();
 
     // ----- Part b -----
@@ -179,7 +192,7 @@ void A1::Q2(){
         perf1.set(0, N - 2, (end - start)/(double)(CLOCKS_PER_SEC));
     }
 
-    cout << "b) The performance is:" << endl;
+    cout << "b)\nThe performance is:" << endl;
     perf1.show();
 
     // ----- Part c -----
@@ -200,7 +213,7 @@ void A1::Q2(){
     }
 
     cout << "Banded:" << endl;
-    cout << "c) The performance is:" << endl;
+    cout << "c)\nThe performance is:" << endl;
     perf2.show();
 
     // ----- Part c -----
@@ -214,7 +227,7 @@ void A1::Q2(){
         req3.set(0, N - 2, -(node_V.get((N+1)*(N+1)-2))/(branch_I.get(0)));
     }
     
-    cout << "d) The equivalent resistances are:" << endl;
+    cout << "d)\nThe equivalent resistances are:" << endl;
     req3.show();
 
     cout << "\nA1 Q2 Solved." << endl;
@@ -223,6 +236,123 @@ void A1::Q2(){
 
 /*  Question 3  */
 void A1::Q3(){
+    
+    cout << "\n--------------------" << endl;
+    cout << "Solving A1 Q3..." << endl;
+    cout << "--------------------" << endl;
+
+    // ----- Part a -----
+    // set up problem
+    double width = 0.1;
+    double h = 0.001; 
+    double omega = 1.5;
+    double tol = 1e-5;
+
+    FDM<> fdm(width/h + 1, width/h + 1, h);
+    // set boundaries
+    // lower Dirichlet bound
+    fdm.set(width/h, width/h, 0, width/h, 0, false);
+    // left Dirichlet bound
+    fdm.set(0, width/h, 0, 0, 0, false);
+    // top right Dirichlet bound
+    fdm.set(0, 0.02/h, 0.06/h, width/h, 110, false);
+    
+    // run solver
+    fdm.SOR(omega, tol);
+    fdm.get_phi().write_mat("solution.csv");
+    
+    cout << "a)\nFor h = " << h << " and omega = " << omega << ":" << endl;
+    cout << "Nodes: " << (fdm.get_n_row()*fdm.get_n_col()) << endl;
+    cout << "Iterations: " << fdm.num_itr << std::endl;
+    cout << "Current Tolerance: " << fdm.max_delta << std::endl;
+    cout << "Time taken: " << fdm.duration << "s" << std::endl;
+    
+    // ----- Part b -----
+    // set up problem
+    width = 0.1;
+    h = 0.02; 
+    tol = 1e-5;
+    Matrix<> omega_vals(1,10);
+    Matrix<> iterations(1, 10);
+    Matrix<> node_phi(1, 10);
+
+    for(int i = 0; i < 10; i++){
+        omega = 1.05 + i*0.1;
+        FDM<> fdm(width/h + 1, width/h + 1, h);
+        // set boundaries
+        fdm.set(width/h, width/h, 0, width/h, 0, false);
+        fdm.set(0, width/h, 0, 0, 0, false);
+        fdm.set(0, 0.02/h, 0.06/h, width/h, 110, false);
+        
+        try{
+            fdm.SOR(omega, tol);
+        }catch(const char* msg){
+            FLAG -= 1;
+            cout << endl << msg  << endl << endl;
+        }
+        
+        omega_vals.set(0, i, omega);
+        iterations.set(0, i, fdm.num_itr);
+        node_phi.set(0, i, fdm.get_phi(0.06/h, 0.06/h));
+    }
+    
+    cout << "b)\nFor h = " << h << endl;
+    cout << "The omega values are:" << endl;
+    omega_vals.show();
+    cout << "The number of iterations are:" << endl;
+    iterations.show();
+    cout << "The node potential at (0.06, 0.04) is:" << endl;
+    node_phi.show();
+    
+    // ----- Part c -----
+    // set up problem
+    width = 0.1;
+    omega = 1.35; 
+    tol = 1e-5;
+    Matrix<> h_vals(1,6);
+    iterations = Matrix<>(1,6);
+    node_phi = Matrix<>(1,6);
+
+    for(int i = 0; i < 6; i++){
+        h = (double)(0.02)/pow(2,i);
+        FDM<> fdm(width/h + 1, width/h + 1, h);
+        // set boundaries
+        fdm.set(width/h, width/h, 0, width/h, 0, false);
+        fdm.set(0, width/h, 0, 0, 0, false);
+        fdm.set(0, 0.02/h, 0.06/h, width/h, 110, false);
+        
+        try{
+            fdm.SOR(omega, tol);
+        }catch(const char* msg){
+            FLAG -= 1;
+            cout << endl << msg  << endl << endl;
+        }
+        
+        h_vals.set(0, i, 1/h);
+        iterations.set(0, i, fdm.num_itr);
+        node_phi.set(0, i, fdm.get_phi(0.06/h, 0.06/h));
+    }
+    
+    cout << "b)\nFor omega = " << omega << endl;
+    cout << "The 1/h values are:" << endl;
+    h_vals.show();
+    cout << "The number of iterations are:" << endl;
+    iterations.show();
+    cout << "The node potential at (0.06, 0.04) is:" << endl;
+    node_phi.show();
+
+    cout << "\nA1 Q3 Solved." << endl;
+    return;
+
+
+
+
+
+
+
+
+
+
 
     return;
 }
