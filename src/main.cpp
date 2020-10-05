@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cassert>
 #include <stdlib.h>
+#include <math.h>
 #include "Matrix.h"
 #include "Basic.h"
 #include "matrix_solver.h"
@@ -29,7 +30,7 @@ int main(){
     cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
 
     try{
-        A1 a1 = A1(3);
+        A1 a1 = A1();
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;
