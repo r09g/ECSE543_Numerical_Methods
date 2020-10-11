@@ -15,8 +15,6 @@
 #include "matrix_solver.h"
 #include "LRN.h"
 #include "FDM.h"
-
-
 #include "A1.cpp"
 
 using namespace std;

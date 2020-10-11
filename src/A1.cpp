@@ -13,6 +13,7 @@
 #include "Basic.h"
 #include "matrix_solver.h"
 #include "LRN.h"
+#include "FDM.h"
 
 using namespace std;
 
