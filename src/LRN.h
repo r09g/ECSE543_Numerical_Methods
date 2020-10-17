@@ -177,18 +177,18 @@ void LRN<T>::compute_Y(){
 }
 
 /*  
-    Generate NxN resistor mesh.
+    Generate NxN (nodes) resistor mesh.
 
     Resistors have uniform resistance r_ohms = 10k by default.
     Test source: 1A current source with Norton equivlent resistance = r_ohms.
 */
 template <typename T>
 void LRN<T>::nxn_res_mesh(int N, bool write_csv, double r_ohms){
-    if(N <= 0){
+    if(N <= 1){
         throw "LRN::nxn_res_mesh ERROR: Invalid mesh size";
     }
-    int n_nodes = (N + 1)*(N + 1);
-    int n_branches = 2*N*(N + 1) + 1;
+    int n_nodes = N*N;
+    int n_branches = 2*N*(N - 1) + 1;
     
     Matrix<T> cct_file(n_branches + 1, 5);
     cct_file.set(0, 0, n_nodes);
@@ -202,15 +202,15 @@ void LRN<T>::nxn_res_mesh(int N, bool write_csv, double r_ohms){
             cct_file.set(k + 1, 2, 1);
             cct_file.set(k + 1, 3, r_ohms);
             cct_file.set(k + 1, 4, 0);
-        } else if(k <= N*(N + 1)) {  // horizontal branches
-            cct_file.set(k + 1, 0, k + ceil((double)(k)/N) - 1);
-            cct_file.set(k + 1, 1, k + ceil((double)(k)/N) - 2);
+        } else if(k <= N*(N - 1)) {  // horizontal branches
+            cct_file.set(k + 1, 0, k + ceil((double)(k)/(N - 1)) - 1);
+            cct_file.set(k + 1, 1, k + ceil((double)(k)/(N - 1)) - 2);
             cct_file.set(k + 1, 2, 0);
             cct_file.set(k + 1, 3, r_ohms);
             cct_file.set(k + 1, 4, 0);
         } else {  // vertical branches
-            cct_file.set(k + 1, 0, k - N*(N + 1) - 1);
-            cct_file.set(k + 1, 1, k - N*N);
+            cct_file.set(k + 1, 0, k - N*(N - 1) - 1);
+            cct_file.set(k + 1, 1, k - (N - 1)*(N - 1));
             cct_file.set(k + 1, 2, 0);
             cct_file.set(k + 1, 3, r_ohms);
             cct_file.set(k + 1, 4, 0);

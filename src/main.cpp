@@ -6,8 +6,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <ctime>
-#include <cassert>
+#include <windows.h>
 #include <stdlib.h>
 #include <math.h>
 #include "Matrix.h"
@@ -19,16 +18,19 @@
 
 using namespace std;
 
-int FLAG = 0;
+int FLAG = 0;  // to be used at task assignment level or higher
 
 int main(){
     cout << endl;
     srand(time(NULL));
-    clock_t tic = clock();
-    cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
+    LARGE_INTEGER freq, tic, toc;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&tic);
 
+    cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
+    
     try{
-        A1 a1 = A1();
+        A1 a1 = A1(2);
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;
@@ -36,8 +38,8 @@ int main(){
 
     cout << "\nERROR FLAG: " << FLAG << endl;
 
-    clock_t toc = clock();
-    double duration = (toc - tic) / (double)(CLOCKS_PER_SEC);
+    QueryPerformanceCounter(&toc);
+    double duration = 1.0*(toc.QuadPart - tic.QuadPart)/freq.QuadPart;
     cout << "Executed in " << duration << "s" << endl << endl;
     return EXIT_SUCCESS;
 }

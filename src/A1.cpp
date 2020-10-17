@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <ctime>
+#include <windows.h>
 #include <cassert>
 #include <stdlib.h>
 #include "Matrix.h"
@@ -176,7 +176,7 @@ void A1::Q2(){
             cct.cholesky_solve();
             Matrix<double> node_V = cct.get_v();
             Matrix<double> branch_I = cct.get_i();
-            req1.set(0, N - 2, -(node_V.get((N+1)*(N+1)-2))/(branch_I.get(0)));
+            req1.set(0, N - 2, -(node_V.get(N*N - 2))/(branch_I.get(0)));
         }
 
         cout << "---> Non-banded:" << endl;
@@ -186,16 +186,19 @@ void A1::Q2(){
 
     // ----- Part b -----
     {
+        LARGE_INTEGER freq, tic, toc;
+        QueryPerformanceFrequency(&freq);
+
         Matrix<double> perf1(1,14);
         for(int N = 2; N <= 15; N++){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
 
-            clock_t start = clock();
+            QueryPerformanceCounter(&tic);
             cct.cholesky_solve();
-            clock_t end = clock();
+            QueryPerformanceCounter(&toc);
 
-            perf1.set(0, N - 2, (end - start)/(double)(CLOCKS_PER_SEC));
+            perf1.set(0, N - 2, 1.0*(toc.QuadPart-tic.QuadPart)/freq.QuadPart);
         }
 
         cout << "b)\nThe performance is:" << endl;
@@ -204,20 +207,23 @@ void A1::Q2(){
 
     // ----- Part c -----
     {
+        LARGE_INTEGER freq, tic, toc;
+        QueryPerformanceFrequency(&freq);
+
         Matrix<double> req2(1,14);
         Matrix<double> perf2(1,14);
         for(int N = 2; N <= 15; N++){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
 
-            clock_t start = clock();
-            cct.cholesky_solve_banded(N+2);  // for this problem only: b = N+2
-            clock_t end = clock();
+            QueryPerformanceCounter(&tic);
+            cct.cholesky_solve_banded(N+1);  // for this problem only: b = N+1
+            QueryPerformanceCounter(&toc);
 
             Matrix<double> node_V = cct.get_v();
             Matrix<double> branch_I = cct.get_i();
-            req2.set(0, N - 2, -(node_V.get((N+1)*(N+1)-2))/(branch_I.get(0)));
-            perf2.set(0, N - 2, (end - start)/(double)(CLOCKS_PER_SEC));
+            req2.set(0, N - 2, -(node_V.get(N*N - 2))/(branch_I.get(0)));
+            perf2.set(0, N - 2, 1.0*(toc.QuadPart-tic.QuadPart)/freq.QuadPart);
         }
 
         cout << "---> Banded:" << endl;
@@ -231,10 +237,10 @@ void A1::Q2(){
         for(int N = 2; N <= 15; N++){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
-            cct.cholesky_solve_banded(N+2);  // for this problem only: b = N+2
+            cct.cholesky_solve_banded(N+1);  // for this problem only: b = N+1
             Matrix<double> node_V = cct.get_v();
             Matrix<double> branch_I = cct.get_i();
-            req3.set(0, N - 2, -(node_V.get((N+1)*(N+1)-2))/(branch_I.get(0)));
+            req3.set(0, N - 2, -(node_V.get(N*N - 2))/(branch_I.get(0)));
         }
         
         cout << "d)\nThe equivalent resistances are:" << endl;
