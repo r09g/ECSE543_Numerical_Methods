@@ -78,7 +78,7 @@ LRN<T>::LRN(){}
 
     Convention:
                <--- i_k
-        |------------0     
+        |------------O     
     |-------|        
     ^       R        +
     ^       |
@@ -86,7 +86,7 @@ LRN<T>::LRN(){}
     ^       V
     ^       +        -
     |-------|        
-        |------------0
+        |------------O
 
     KVL: (I + i_k)*R - V = v_k   
 
@@ -181,6 +181,14 @@ void LRN<T>::compute_Y(){
 
     Resistors have uniform resistance r_ohms = 10k by default.
     Test source: 1A current source with Norton equivlent resistance = r_ohms.
+
+    Convention:
+
+    -------------------------------- GND (Node 0)
+    |     R     |           +   |
+    |   Mesh    |           I   R
+    |           |           -   |
+    -------------------------------- V+ (Node N-1)
 */
 template <typename T>
 void LRN<T>::nxn_res_mesh(int N, bool write_csv, double r_ohms){
