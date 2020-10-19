@@ -71,21 +71,14 @@ void A1::Q1(){
         Matrix<int> results(1,9);
         int num_correct = 0;
         for(int size = 2; size <= 10; size++){ 
-            Matrix<double> A = Matrix<double>::SSPD_mat(10);
-            double x1[] = {1,2,3,4,5,6,7,8,9,10};
-            Matrix<double> x(10,1,x1);
-            Matrix<double> b = A*x; 
-
-            Matrix_Solver::cholesky_solve(&A, &b);
-            bool skip = false;
+            Matrix<double> A = Matrix<double>::SSPD_mat(size);
+            Matrix<double> x(size,1);
             for(int i = 0; i < size; i++){
-                if(std::abs(b.get(i) - x1[i]) > 1e-10){
-                    skip = true;
-                    break;
-                }
+                x.set(i, i + 1);
             }
-
-            if(!skip){
+            Matrix<double> b = A*x; 
+            Matrix_Solver::cholesky_solve(&A, &b);
+            if(b == x){
                 results.set(0, size - 2, 1);
                 num_correct++;
             }
@@ -110,7 +103,6 @@ void A1::Q1(){
             LRN<double> cct(filepath);
             cct.cholesky_solve();
             Matrix<double> node_v = cct.get_v();
-
             switch(i){
                 case 0:
                     if(std::abs(node_v.get(0) - 5) < 1e-10){
@@ -210,9 +202,10 @@ void A1::Q2(){
         LARGE_INTEGER freq, tic, toc;
         QueryPerformanceFrequency(&freq);
 
-        Matrix<double> req2(1,14);
-        Matrix<double> perf2(1,14);
-        for(int N = 2; N <= 15; N++){
+        int size = 15;
+        Matrix<double> req2(1, size-1);
+        Matrix<double> perf2(1, size-1);
+        for(int N = 2; N <= size; N++){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
 
@@ -231,10 +224,11 @@ void A1::Q2(){
         perf2.show();
     }
 
-    // ----- Part c -----
+    // ----- Part d -----
     {
-        Matrix<double> req3(1,14);
-        for(int N = 2; N <= 15; N++){
+        int size = 15;
+        Matrix<double> req3(1, size-1);
+        for(int N = 2; N <= size; N++){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
             cct.cholesky_solve_banded(N+1);  // for this problem only: b = N+1
@@ -313,7 +307,7 @@ void A1::Q3(){
             
             omega_vals.set(0, i, omega);
             iterations.set(0, i, fdm.num_itr);
-            node_phi.set(0, i, fdm.get_phi(0.06/h, 0.04/h));
+            node_phi.set(0, i, fdm.get_phi(0.04/h, 0.06/h));
         }
         
         cout << "b)\nFor h = " << h << endl;
@@ -331,28 +325,31 @@ void A1::Q3(){
         double width = 0.1;
         double omega = 1.35; 
         double tol = 1e-5;
-        Matrix<> h_vals(1,5);
-        Matrix<> iterations = Matrix<>(1,5);
-        Matrix<> node_phi = Matrix<>(1,5);
+        int values = 6;  // number of different values for h
+        Matrix<> h_vals(1, values);
+        Matrix<> iterations = Matrix<>(1, values);
+        Matrix<> node_phi = Matrix<>(1, values);
 
-        for(int i = 0; i < 5; i++){
+        // Do not use for loop here!
+        int i = 0;
+        {
             double h = (double)(0.02)/pow(2,i);
             FDM<> fdm(width/h + 1, width/h + 1, h);
             // set boundaries
             fdm.set(0, 0, 0, width/h, 0, false);
             fdm.set(0, width/h, 0, 0, 0, false);
             fdm.set(0.08/h, width/h, 0.06/h, width/h, 110, false);
-            
+
             try{
                 fdm.SOR(omega, tol);
             }catch(const char* msg){
                 FLAG -= 1;
-                cout << endl << msg  << endl << endl;
+                cout << endl << msg << endl << endl;
             }
-            
+
             h_vals.set(0, i, 1/h);
             iterations.set(0, i, fdm.num_itr);
-            node_phi.set(0, i, fdm.get_phi(0.06/h, 0.04/h));
+            node_phi.set(0, i, fdm.get_phi(0.04/h, 0.06/h));
         }
         
         cout << "c)\nFor omega = " << omega << endl;
@@ -369,11 +366,14 @@ void A1::Q3(){
         // set up problem
         double width = 0.1;
         double tol = 1e-5;
-        Matrix<> h_vals = Matrix<>(1,5);
-        Matrix<> iterations = Matrix<>(1,5);
-        Matrix<> node_phi = Matrix<>(1,5);
+        int values = 6;  // number of different values for h
+        Matrix<> h_vals = Matrix<>(1,values);
+        Matrix<> iterations = Matrix<>(1,values);
+        Matrix<> node_phi = Matrix<>(1,values);
 
-        for(int i = 0; i < 5; i++){
+        // Do not use for loop here!
+        int i = 5;
+        {
             double h = (double)(0.02)/pow(2,i);
             FDM<> fdm(width/h + 1, width/h + 1, h);
             // set boundaries
@@ -390,7 +390,7 @@ void A1::Q3(){
             
             h_vals.set(0, i, 1/h);
             iterations.set(0, i, fdm.num_itr);
-            node_phi.set(0, i, fdm.get_phi(0.06/h, 0.04/h));
+            node_phi.set(0, i, fdm.get_phi(0.04/h, 0.06/h));
         }
         
         cout << "---> Jacobi:" << endl;
@@ -408,18 +408,18 @@ void A1::Q3(){
         double width = 0.1;
         double omega = 1.35;
         double tol = 1e-5;
-
         double v_values[] = 
-            {0,0.03,0.0525,0.0575,0.059,0.06,0.061,0.0625,0.0675,0.08,0.1};
+            {0,0.015,0.035,0.05,0.055,0.06,0.065,0.07,0.08,0.09,0.1};
         double h_values[] = 
-            {0,0.02,0.0325,0.0375,0.039,0.04,0.041,0.0425,0.055,0.08,0.1};
+            {0,0.01,0.02,0.035,0.04,0.045,0.06,0.07,0.08,0.09,0.1};
         Matrix<> h_lines(1,11,h_values);
         Matrix<> v_lines(1,11,v_values);
 
         FDM<> fdm(h_lines, v_lines);
         fdm.set(0, 0, 0, 10, 0, false);
         fdm.set(0, 10, 0, 0, 0, false);
-        fdm.set(9, 10, 5, 10, 110, false);
+        fdm.set(8, 10, 5, 10, 110, false);
+        
         try{    
             fdm.SOR(omega, tol);
         } catch(const char* msg){
@@ -432,8 +432,8 @@ void A1::Q3(){
         cout << "Nodes: " << (fdm.get_n_row()*fdm.get_n_col()) << endl;
         cout << "Iterations: " << fdm.num_itr << std::endl;
         cout << "Time taken: " << fdm.duration << "s" << std::endl;
-        cout << "The node potential at (0.06, 0.04) is:" 
-            << fdm.get_phi(5,5) << endl;
+        cout << "The node potential at (0.06, 0.04) is: " 
+            << fdm.get_phi(4,5) << endl;
 
         cout << "\nA1 Q3 Solved." << endl;
     }

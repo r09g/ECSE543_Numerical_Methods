@@ -189,22 +189,24 @@ Matrix<T> Matrix<T>::identity_mat(int n){
     return mat;
 }
 
-/*  creates a random square matrix of shape (n, n); values range in [0,n^2]  */
+/*  
+    creates a random square matrix of shape (n, n)
+    values range in [-n^2/2,n^2/2] 
+*/
 template <class T>
 Matrix<T> Matrix<T>::rand_mat(int n){
-    Matrix<T> mat(n);
-    for(int i = 0; i < n*n; i++){
-        mat.set(i,rand() % (n*n + 1));
-    }
-    return mat;
+    return rand_mat(n, n);
 }
 
-/*  creates a random matrix of shape (n_row, n_col); values range in [0,n^2]  */
+/*  
+    creates a random matrix of shape (n_row, n_col)
+    values range in [-n^2/2,n^2/2]
+*/
 template <class T>
 Matrix<T> Matrix<T>::rand_mat(int n_row, int n_col){
     Matrix<T> mat(n_row, n_col);
     for(int i = 0; i < n_row*n_col; i++){
-        mat.set(i,rand() % (n_row*n_col + 1));
+        mat.set(i, rand() % (n_row*n_col + 1) - n_row*n_col/2);
     }
     return mat;
 }
@@ -214,19 +216,16 @@ Matrix<T> Matrix<T>::rand_mat(int n_row, int n_col){
 */
 template <class T>
 Matrix<T> Matrix<T>::SSPD_mat(int n){
-    Matrix<T> mat = Matrix<T>::rand_mat(n);
-    mat = mat + Matrix_Dummy::transpose(mat);
-    for(int diag = 0; diag < n; diag++){
-        int row_sum = 0;
-        int col_sum = 0;
-        for(int i = 0; i < n; i++){
-            row_sum += mat.get(diag, i);
-            col_sum += mat.get(i, diag);
+    Matrix<T> mat(n, n);
+    for(int row = 0; row < n; row++){
+        for(int col = 0; col <= row; col++){
+            mat.set(row, col, rand() % (n*n + 1) - n*n/2);
         }
-        row_sum -= mat.get(diag, diag);
-        col_sum -= mat.get(diag, diag);
-        mat.set(diag, diag, std::max(row_sum, col_sum) + 1);
     }
+    for(int diag = 0; diag < n; diag++){
+        mat.set(diag, diag, std::abs(mat.get(diag, diag)) + 1);
+    }  
+    mat = mat * Matrix_Dummy::transpose(mat);
     return mat;
 }
 
@@ -624,7 +623,7 @@ bool Matrix<T>::operator== (const Matrix& mat){
         return false;
     }
     for(int i = 0; i < this->n_row * this->n_col; i++){
-        if(this->data[i] == mat.data[i]){
+        if(std::abs(this->data[i] - mat.data[i]) < 1e-10){
             continue;
         } else {
             return false;

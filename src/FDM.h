@@ -22,7 +22,7 @@ class FDM {
         bool uniform;
         Matrix<T> phi;  // node potential
         Matrix<bool> state;  // node state. [true->free | false->fixed].
-        Matrix<T> h_lines, v_lines;  // horizontal and vertical lines
+        Matrix<T> h_lines, v_lines;  // horizontal and vertical grid lines
 
     public:
         // Uniform Spacing

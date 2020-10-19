@@ -29,14 +29,15 @@ int main(){
 
     cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
     
+    // solve assignment questions here
     try{
-        A1 a1 = A1(2);
+        A1 a1 = A1();
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;
     }
 
-    cout << "\nERROR FLAG: " << FLAG << endl;
+    cout << "\nERROR FLAG: " << FLAG << endl;  // 0 = no error
 
     QueryPerformanceCounter(&toc);
     double duration = 1.0*(toc.QuadPart - tic.QuadPart)/freq.QuadPart;

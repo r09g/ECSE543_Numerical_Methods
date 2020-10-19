@@ -15,6 +15,29 @@
 
 namespace Matrix_Solver{
 
+    template <typename T> void cholesky(Matrix<T> A, Matrix<T>* L);
+    template <typename T> void cholesky(Matrix<T>* A);
+    template <typename T> 
+        void forward_elimination(Matrix<T>& L, Matrix<T> b, Matrix<T>* y);
+    template <typename T> void forward_elimination(Matrix<T>& L, Matrix<T>* b);
+    template <typename T>
+        void elimination(Matrix<T> A, Matrix<T> b, Matrix<T>* L, Matrix<T>* y);
+    template <typename T> void elimination(Matrix<T>* A, Matrix<T>* b);
+    template <typename T> 
+        void back_substitution(Matrix<T>& U, Matrix<T> y, Matrix<T>* x);
+    template <typename T> void back_substitution(Matrix<T>& U, Matrix<T>* y);
+    template <typename T>  
+        void cholesky_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x);
+    template <typename T> void cholesky_solve(Matrix<T>* A, Matrix<T>* b);
+    template <typename T> int find_HBW(Matrix<T>* A);
+    template <typename T> void cholesky_banded(Matrix<T>* A, int HBW=-1);
+    template <typename T> 
+        void elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1);
+    template <typename T>
+        void cholesky_solve_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1);
+
+}
+
 /*  
     Cholesky Decomposition
 
@@ -23,7 +46,7 @@ namespace Matrix_Solver{
     *L: decomposed lower triangular matrix
 */
 template <typename T> 
-void cholesky(Matrix<T> A, Matrix<T>* L){
+void Matrix_Solver::cholesky(Matrix<T> A, Matrix<T>* L){
     int row = A.get_n_row();
     int col = A.get_n_col();
     for(int j = 0; j < row; j++){
@@ -43,7 +66,7 @@ void cholesky(Matrix<T> A, Matrix<T>* L){
 
 /*  In-place computation version of cholesky function  */
 template <typename T> 
-void cholesky(Matrix<T>* A){
+void Matrix_Solver::cholesky(Matrix<T>* A){
     int row = A->get_n_row();
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
@@ -76,7 +99,7 @@ void cholesky(Matrix<T>* A){
     *y: unknown vector
 */
 template <typename T>
-void forward_elimination(Matrix<T>& L, Matrix<T> b, Matrix<T>* y){
+void Matrix_Solver::forward_elimination(Matrix<T>& L, Matrix<T> b, Matrix<T>* y){
     int length = b.get_n_row();
     for(int j = 0; j < length; j++){
         y->set(j, b.get(j)/L.get(j, j));
@@ -89,7 +112,7 @@ void forward_elimination(Matrix<T>& L, Matrix<T> b, Matrix<T>* y){
 
 /*  In-place computation version of forward_elimination  */
 template <typename T>
-void forward_elimination(Matrix<T>& L, Matrix<T>* b){
+void Matrix_Solver::forward_elimination(Matrix<T>& L, Matrix<T>* b){
     int length = b->get_n_row();
     for(int j = 0; j < length; j++){
         b->set(j, b->get(j)/L.get(j, j));
@@ -112,7 +135,7 @@ void forward_elimination(Matrix<T>& L, Matrix<T>* b){
     *y: unknown vector
 */
 template <typename T>
-void elimination(Matrix<T> A, Matrix<T> b, Matrix<T>* L, Matrix<T>* y){
+void Matrix_Solver::elimination(Matrix<T> A, Matrix<T> b, Matrix<T>* L, Matrix<T>* y){
 
     int row = A.get_n_row();
     int col = A.get_n_col();
@@ -135,7 +158,7 @@ void elimination(Matrix<T> A, Matrix<T> b, Matrix<T>* L, Matrix<T>* y){
 
 /*  In-place computation version of elimination  */
 template <typename T>
-void elimination(Matrix<T>* A, Matrix<T>* b){
+void Matrix_Solver::elimination(Matrix<T>* A, Matrix<T>* b){
     int row = A->get_n_row();
     int col = A->get_n_col();
     for(int j = 0; j < row; j++){
@@ -170,7 +193,7 @@ void elimination(Matrix<T>* A, Matrix<T>* b){
     *x: unknown vector
 */
 template <typename T>
-void back_substitution(Matrix<T>& U, Matrix<T> y, Matrix<T>* x){
+void Matrix_Solver::back_substitution(Matrix<T>& U, Matrix<T> y, Matrix<T>* x){
     int length = y.get_n_row();
     for(int j = length - 1; j >= 0; j--){
         x->set(j, y.get(j)/U.get(j, j));
@@ -183,7 +206,7 @@ void back_substitution(Matrix<T>& U, Matrix<T> y, Matrix<T>* x){
 
 /*  In-place computation version of back_substitution  */
 template <typename T>
-void back_substitution(Matrix<T>& U, Matrix<T>* y){
+void Matrix_Solver::back_substitution(Matrix<T>& U, Matrix<T>* y){
     int length = y->get_n_row();
     for(int j = length - 1; j >= 0; j--){
         y->set(j, y->get(j)/U.get(j, j));
@@ -202,7 +225,7 @@ void back_substitution(Matrix<T>& U, Matrix<T>* y){
     *x: unknown vector
 */
 template <typename T>
-void cholesky_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
+void Matrix_Solver::cholesky_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
     elimination(&A, &b);
     A.transpose();
     back_substitution(A, &b);
@@ -210,45 +233,18 @@ void cholesky_solve(Matrix<T> A, Matrix<T> b, Matrix<T>* x){
     return;
 }
 
-/*  In-place computation version of solve_cholesky  */
+/*  In-place computation version of cholesky_solve  */
 template <typename T>
-void cholesky_solve(Matrix<T>* A, Matrix<T>* b){
+void Matrix_Solver::cholesky_solve(Matrix<T>* A, Matrix<T>* b){
     elimination(A, b);
     A->transpose();
     back_substitution(*A, b);
     return;
 }
 
-/*  
-    Solve Ax = b using Banded Cholesky Decomposition (In-Place)
-
-    *A: square, symmetric, P.D.
-    *b: output vector
-    HBW: half bandwidth. Will automatically determine if not provided.
-*/
+/*  Find the half-bandwidth of A  */
 template <typename T>
-void cholesky_solve_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1){
-    elimination_banded(A, b, HBW);
-    A->transpose();
-    back_substitution(*A, b);
-    return;
-}
-
-
-/*  
-    Create square symmetric P.D. matrix 
-    
-    Implemented in Matrix.h
-
-    n: matrix dimension (n, n)
-    Returns: matrix
-*/
-
-}
-
-// TODO
-template <typename T>
-int find_HBW(Matrix<T>* A){
+int Matrix_Solver::find_HBW(Matrix<T>* A){
     int num_row = A->get_n_row();
     int HBW = 0;
     for(int i = 0; i < num_row; i++){
@@ -265,7 +261,6 @@ int find_HBW(Matrix<T>* A){
     return HBW;
 }
 
-
 /*    
     Banded Cholesky Decomposition (In-Place)
 
@@ -274,7 +269,7 @@ int find_HBW(Matrix<T>* A){
     HBW: half bandwidth. Will automatically determine if not provided.
 */
 template <typename T> 
-void cholesky_banded(Matrix<T>* A, int HBW=-1){
+void Matrix_Solver::cholesky_banded(Matrix<T>* A, int HBW){
     if(HBW == -1){
         HBW = find_HBW(A);
     }
@@ -312,7 +307,7 @@ void cholesky_banded(Matrix<T>* A, int HBW=-1){
     HBW: half bandwidth. Will automatically determine if not provided.
 */
 template <typename T>
-void elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1){
+void Matrix_Solver::elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW){
     if(HBW == -1){
         HBW = find_HBW(A);
     }
@@ -342,7 +337,20 @@ void elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1){
     return;
 }
 
+/*  
+    Solve Ax = b using Banded Cholesky Decomposition (In-Place)
+
+    *A: square, symmetric, P.D.
+    *b: output vector
+    HBW: half bandwidth. Will automatically determine if not provided.
+*/
+template <typename T>
+void Matrix_Solver::cholesky_solve_banded(Matrix<T>* A, Matrix<T>* b, int HBW){
+    elimination_banded(A, b, HBW);
+    A->transpose();
+    back_substitution(*A, b);
+    return;
+}
+
 
 #endif
-
-

@@ -185,10 +185,14 @@ void LRN<T>::compute_Y(){
     Convention:
 
     -------------------------------- GND (Node 0)
+    |                       |   |
+    -------------           |   |
     |     R     |           +   |
     |   Mesh    |           I   R
     |           |           -   |
-    -------------------------------- V+ (Node N-1)
+    -------------           |   |
+                |           |   |
+                -------------------- V+ (Node N-1)
 */
 template <typename T>
 void LRN<T>::nxn_res_mesh(int N, bool write_csv, double r_ohms){
@@ -258,7 +262,7 @@ void LRN<T>::cholesky_solve_banded(int HBW){
     Matrix<T> A = this->A_*this->Y_*transpose(this->A_);
     Matrix<T> b = this->A_*(this->J_ - this->Y_*this->E_);
     Matrix_Solver::cholesky_solve_banded(&A, &b, HBW);
-    
+
     this->v_ = b;
     this->i_ = this->Y_*(transpose(this->A_)*this->v_) 
         + this->Y_*this->E_ - this->J_;
