@@ -364,7 +364,7 @@ void A1::Q3(){
         Matrix<> iterations = Matrix<>(1,values);
         Matrix<> node_phi = Matrix<>(1,values);
 
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < values; i++){
             double h = 0.02/pow(2,i);
             FDM<> fdm(width/h + 1, width/h + 1, h);
             // set boundaries
