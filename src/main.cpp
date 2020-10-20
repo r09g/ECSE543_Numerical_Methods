@@ -29,7 +29,7 @@ int main(){
     
     // solve assignment questions here
     try{
-        A1 a1 = A1(3);
+        A1 a1 = A1();
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;
