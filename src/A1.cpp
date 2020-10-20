@@ -6,8 +6,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <windows.h>
-#include <cassert>
+#include <chrono>
 #include <stdlib.h>
 #include "Matrix.h"
 #include "Basic.h"
@@ -178,19 +177,17 @@ void A1::Q2(){
 
     // ----- Part b -----
     {
-        LARGE_INTEGER freq, tic, toc;
-        QueryPerformanceFrequency(&freq);
-
         Matrix<double> perf1(1,14);
         for(int N = 2; N <= 15; N++){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
 
-            QueryPerformanceCounter(&tic);
+            auto tic = std::chrono::high_resolution_clock::now();
             cct.cholesky_solve();
-            QueryPerformanceCounter(&toc);
+            auto toc = std::chrono::high_resolution_clock::now();
 
-            perf1.set(0, N - 2, 1.0*(toc.QuadPart-tic.QuadPart)/freq.QuadPart);
+            perf1.set(0, N - 2, std::chrono::duration
+                <double, std::milli>(toc - tic).count()/1e3);
         }
 
         cout << "b)\nThe performance is:" << endl;
@@ -199,9 +196,6 @@ void A1::Q2(){
 
     // ----- Part c -----
     {
-        LARGE_INTEGER freq, tic, toc;
-        QueryPerformanceFrequency(&freq);
-
         int size = 15;
         Matrix<double> req2(1, size-1);
         Matrix<double> perf2(1, size-1);
@@ -209,14 +203,15 @@ void A1::Q2(){
             LRN<double> cct;
             cct.nxn_res_mesh(N);
 
-            QueryPerformanceCounter(&tic);
+            auto tic = std::chrono::high_resolution_clock::now();
             cct.cholesky_solve_banded(N+1);  // for this problem only: b = N+1
-            QueryPerformanceCounter(&toc);
+            auto toc = std::chrono::high_resolution_clock::now();
 
             Matrix<double> node_V = cct.get_v();
             Matrix<double> branch_I = cct.get_i();
             req2.set(0, N - 2, -(node_V.get(N*N - 2))/(branch_I.get(0)));
-            perf2.set(0, N - 2, 1.0*(toc.QuadPart-tic.QuadPart)/freq.QuadPart);
+            perf2.set(0, N - 2, std::chrono::duration
+                <double, std::milli>(toc - tic).count()/1e3);
         }
 
         cout << "---> Banded:" << endl;
@@ -330,10 +325,8 @@ void A1::Q3(){
         Matrix<> iterations = Matrix<>(1, values);
         Matrix<> node_phi = Matrix<>(1, values);
 
-        // Do not use for loop here!
-        int i = 0;
-        {
-            double h = (double)(0.02)/pow(2,i);
+        for(int i = 0; i < values; i++){
+            double h = 0.02/pow(2,i);
             FDM<> fdm(width/h + 1, width/h + 1, h);
             // set boundaries
             fdm.set(0, 0, 0, width/h, 0, false);
@@ -371,10 +364,8 @@ void A1::Q3(){
         Matrix<> iterations = Matrix<>(1,values);
         Matrix<> node_phi = Matrix<>(1,values);
 
-        // Do not use for loop here!
-        int i = 5;
-        {
-            double h = (double)(0.02)/pow(2,i);
+        for(int i = 0; i < 3; i++){
+            double h = 0.02/pow(2,i);
             FDM<> fdm(width/h + 1, width/h + 1, h);
             // set boundaries
             fdm.set(0, 0, 0, width/h, 0, false);

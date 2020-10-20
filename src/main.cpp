@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <windows.h>
+#include <chrono>
 #include <stdlib.h>
 #include <math.h>
 #include "Matrix.h"
@@ -23,15 +23,13 @@ int FLAG = 0;  // to be used at task assignment level or higher
 int main(){
     cout << endl;
     srand(time(NULL));
-    LARGE_INTEGER freq, tic, toc;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&tic);
+    auto start = chrono::high_resolution_clock::now(); 
 
     cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
     
     // solve assignment questions here
     try{
-        A1 a1 = A1();
+        A1 a1 = A1(3);
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;
@@ -39,8 +37,9 @@ int main(){
 
     cout << "\nERROR FLAG: " << FLAG << endl;  // 0 = no error
 
-    QueryPerformanceCounter(&toc);
-    double duration = 1.0*(toc.QuadPart - tic.QuadPart)/freq.QuadPart;
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration
+            <double, std::milli>(end - start).count()/1e3;
     cout << "Executed in " << duration << "s" << endl << endl;
     return EXIT_SUCCESS;
 }

@@ -9,7 +9,7 @@
 #define __FDM__
 
 #include <math.h>
-#include <ctime>
+#include <chrono>
 #include <limits>
 #include "Matrix.h"
 #include "matrix_solver.h" 
@@ -471,7 +471,7 @@ void FDM<T>::SOR(double omega, double tol){
     this->duration = 0;
     double max_delta;
     int count = 0;
-    clock_t start = clock();
+    auto tic = std::chrono::high_resolution_clock::now();
     if(this->uniform == true){
         do{
             max_delta = 0;
@@ -519,7 +519,9 @@ void FDM<T>::SOR(double omega, double tol){
             if(count > 1e7){
                 throw "FDM::SOR Error: Solver failed to converge. ITER > 1e7";
             }
-            if((clock() - start)/(double)(CLOCKS_PER_SEC) > 10*60){
+            auto toc_tmp = std::chrono::high_resolution_clock::now();
+            if(std::chrono::duration
+                <double, std::milli>(toc_tmp - tic).count()/1e3 > 10*60){
                 throw "FDM::SOR Error: Solver failed to converge. TIME > 10min";
             }
             if(max_delta > 1e6){
@@ -600,7 +602,9 @@ void FDM<T>::SOR(double omega, double tol){
             if(count > 1e7){
                 throw "FDM::SOR Error: Solver failed to converge. ITER > 1e7";
             }
-            if((clock() - start)/(double)(CLOCKS_PER_SEC) > 10*60){
+            auto toc_tmp = std::chrono::high_resolution_clock::now();
+            if(std::chrono::duration
+                <double, std::milli>(toc_tmp - tic).count()/1e3 > 10*60){
                 throw "FDM::SOR Error: Solver failed to converge. TIME > 10min";
             }
             if(max_delta > 1e6){
@@ -610,10 +614,11 @@ void FDM<T>::SOR(double omega, double tol){
 
     }
 
-    clock_t end = clock();
+    auto toc = std::chrono::high_resolution_clock::now();
     this->max_delta = max_delta;
     this->num_itr = count;
-    this->duration = (end-start)/(double)(CLOCKS_PER_SEC);
+    this->duration = std::chrono::duration
+        <double, std::milli>(toc - tic).count()/1e3;
     return;
 }
 
@@ -631,7 +636,7 @@ void FDM<T>::jacobi(double tol){
     double max_delta;
     int count = 0;
     Matrix<T> past;
-    clock_t start = clock();
+    auto tic = std::chrono::high_resolution_clock::now();
     do{
         max_delta = 0;
         past = this->get_phi();
@@ -673,7 +678,9 @@ void FDM<T>::jacobi(double tol){
         if(count > 1e7){
             throw "FDM::jacobi Error: Solver failed to converge. ITER > 1e7";
         }
-        if((clock() - start)/(double)(CLOCKS_PER_SEC) > 10*60){
+        auto toc_tmp = std::chrono::high_resolution_clock::now();
+        if(std::chrono::duration
+            <double, std::milli>(toc_tmp - tic).count()/1e3 > 10*60){
             throw "FDM::jacobi Error: Solver failed to converge. TIME > 10min";
         }
         if(max_delta > 1e6){
@@ -681,10 +688,11 @@ void FDM<T>::jacobi(double tol){
         }
     } while(max_delta > tol);
 
-    clock_t end = clock();
+    auto toc = std::chrono::high_resolution_clock::now();
     this->max_delta = max_delta;
     this->num_itr = count;
-    this->duration = (end-start)/(double)(CLOCKS_PER_SEC);
+    this->duration = std::chrono::duration
+        <double, std::milli>(toc - tic).count()/1e3;
     return;
 }
 
