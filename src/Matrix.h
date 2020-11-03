@@ -98,7 +98,7 @@ class Matrix {
         Matrix<float> to_float();
 
         // I/O to Excel
-        static Matrix<T>& read_mat(const std::string& filepath);
+        static Matrix<T> read_mat(const std::string& filepath);
         void write_mat(const std::string& filepath);
 
         // destructor
@@ -137,7 +137,7 @@ T* Matrix<T>::deep_copy(const T* data, unsigned int length){
 
 /*  reads and returns the matrix from a csv  */
 template <class T>
-Matrix<T>& Matrix<T>::read_mat(const std::string& filepath){
+Matrix<T> Matrix<T>::read_mat(const std::string& filepath){
     
     std::ifstream file;
     file.open(filepath);
@@ -151,20 +151,26 @@ Matrix<T>& Matrix<T>::read_mat(const std::string& filepath){
     getline(ss, output, ',');
     n_col = stoi(output);  
     
-    Matrix<T>* new_matrix = new Matrix<T>(n_row, n_col);
+    Matrix<T> new_matrix(n_row, n_col);
     int row = 0;
     int col = 0;
     while(getline(file,line)){
         std::stringstream ss(line);
         col = 0;
         while(getline(ss, output, ',')){
-            new_matrix->set(row, col, stod(output));
+            new_matrix.set(row, col, stod(output));
             col++;
+            if(col >= n_col){
+                break;
+            }
         }
         row++;
+        if(row >= n_row){
+            break;
+        }
     }
     file.close();
-    return *new_matrix;
+    return new_matrix;
 }
 
 /*  creates a square zero matrix of size n  */

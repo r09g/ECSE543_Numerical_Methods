@@ -97,7 +97,7 @@ void A1::Q1(){
         Matrix<int> results = Matrix<int>(1,5);
         int num_correct = 0;
         for(int i = 0; i < 5; i++){
-            std::string filepath = std::string("./data/A1Q1d_test_circuit_")
+            std::string filepath = std::string("./data/A1/A1Q1d_test_circuit_")
                 + std::to_string(i + 1) + std::string(".csv");
             LRN<double> cct(filepath);
             cct.cholesky_solve();
@@ -399,17 +399,21 @@ void A1::Q3(){
         double width = 0.1;
         double omega = 1.35;
         double tol = 1e-5;
+        // double v_values[] = 
+        //     {0,0.015,0.035,0.05,0.055,0.06,0.065,0.07,0.08,0.09,0.1};
+        // double h_values[] = 
+        //     {0,0.01,0.02,0.035,0.04,0.045,0.06,0.07,0.08,0.09,0.1};
         double v_values[] = 
-            {0,0.015,0.035,0.05,0.055,0.06,0.065,0.07,0.08,0.09,0.1};
+            {0,0.03,0.05,0.06,0.07,0.075,0.08,0.085,0.09,0.095,0.1};
         double h_values[] = 
-            {0,0.01,0.02,0.035,0.04,0.045,0.06,0.07,0.08,0.09,0.1};
+            {0,0.03,0.04,0.05,0.06,0.07,0.08,0.085,0.09,0.095,0.1};
         Matrix<> h_lines(1,11,h_values);
         Matrix<> v_lines(1,11,v_values);
 
         FDM<> fdm(h_lines, v_lines);
         fdm.set(0, 0, 0, 10, 0, false);
         fdm.set(0, 10, 0, 0, 0, false);
-        fdm.set(8, 10, 5, 10, 110, false);
+        fdm.set(6, 10, 4, 10, 110, false);
         
         try{    
             fdm.SOR(omega, tol);
@@ -424,11 +428,10 @@ void A1::Q3(){
         cout << "Iterations: " << fdm.num_itr << std::endl;
         cout << "Time taken: " << fdm.duration << "s" << std::endl;
         cout << "The node potential at (0.06, 0.04) is: " 
-            << fdm.get_phi(4,5) << endl;
-
-        cout << "\nA1 Q3 Solved." << endl;
+            << fdm.get_phi(2,3) << endl;
     }
 
+    cout << "\nA1 Q3 Solved." << endl;
     cout << endl << ">>> End of ECSE 543 Assignment 1 <<<" << endl;
     return;
 }

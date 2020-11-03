@@ -72,6 +72,9 @@ class FDM {
         void SOR(double omega, double tol);
         void jacobi(double tol);
 
+        // Post Process
+        double calc_W(Matrix<> S_con);
+
         // public variables
         int num_itr = 0;
         double max_delta = 0;
@@ -696,6 +699,27 @@ void FDM<T>::jacobi(double tol){
     return;
 }
 
+/*  Compute the total energy W = E/e0 over the mesh */
+template <class T>
+double FDM<T>::calc_W(Matrix<> S_con){
+    int e_nodes = S_con.get_n_row();
+    Matrix<> U_con(4,1);
+    double W = 0;
+    for(int row = 0; row < this->n_row - 1; row++){
+        for(int col = 0; col < this->n_col - 1; col++){
+            if(this->state.get(row, col) + this->state.get(row + 1, col)
+                + this->state.get(row, col + 1) 
+                + this->state.get(row + 1, col + 1) > 0){
+                U_con.set(0, 0, this->phi.get(row + 1, col));
+                U_con.set(1, 0, this->phi.get(row, col));
+                U_con.set(2, 0, this->phi.get(row, col + 1));
+                U_con.set(3, 0, this->phi.get(row + 1, col + 1));
+                W = W + ((0.5)*(transpose(U_con)*S_con*U_con)).get(0);
+            }
+        }
+    }
+    return W;
+}
 
 
 #endif

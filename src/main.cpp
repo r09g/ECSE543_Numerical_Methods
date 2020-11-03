@@ -15,6 +15,7 @@
 #include "LRN.h"
 #include "FDM.h"
 #include "A1.cpp"
+#include "A2.cpp"
 
 using namespace std;
 
@@ -29,7 +30,7 @@ int main(){
     
     // solve assignment questions here
     try{
-        A1 a1 = A1();
+        A2 a2 = A2(2);
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;
