@@ -12,7 +12,7 @@
 #include <chrono>
 #include <limits>
 #include "Matrix.h"
-#include "matrix_solver.h" 
+#include "Matrix_Solver.h" 
 
 template <class T = double>
 class FDM {
@@ -23,6 +23,11 @@ class FDM {
         Matrix<T> phi;  // node potential
         Matrix<bool> state;  // node state. [true->free | false->fixed].
         Matrix<T> h_lines, v_lines;  // horizontal and vertical grid lines
+
+        // CG parameters
+        Matrix<T> A_;
+        Matrix<T> b_;
+        Matrix<T> LUT_;
 
     public:
         // Uniform Spacing
@@ -64,6 +69,13 @@ class FDM {
         void set_phi(int row, int col, T phi);
         void set_phi(int row1, int row2, int col1, int col2, T phi);
         void set_phi(int row, int col, Matrix<T> phi);
+        Matrix<T> get_A();
+        Matrix<T> get_b();
+        Matrix<T> get_LUT();
+        void set_A(Matrix<T> A);
+        void set_b(Matrix<T> b);
+        void set_LUT(Matrix<T> LUT);
+
         
         // check if mesh has uniform node spacing
         bool is_uniform() const;
@@ -71,9 +83,10 @@ class FDM {
         // Solvers
         void SOR(double omega, double tol);
         void jacobi(double tol);
+        void CG(int itr = -1);
 
         // Post Process
-        double calc_W(Matrix<> S_con);
+        double calc_W(Matrix<T> S_con);
 
         // public variables
         int num_itr = 0;
@@ -328,7 +341,11 @@ void FDM<T>::show_lines() const{
 /*  Get a deep copy of the FDM  */
 template <class T>
 FDM<T> FDM<T>::deep_copy(){
-    return FDM<T>(this->h, this->phi, this->state);
+    FDM<T> new_mesh(this->h, this->phi, this->state);
+    new_mesh.A_ = this->A_;
+    new_mesh.b_ = this->A_;
+    new_mesh.LUT_ = this->LUT_;
+    return new_mesh;
 }
 
 /*  Get number of rows  */
@@ -457,6 +474,45 @@ void FDM<T>::fix(int row1, int row2, int col1, int col2){
             this->fix(row, col);
         }
     }
+    return;
+}
+
+/*  Get A matrix  */
+template <class T>
+Matrix<T> FDM<T>::get_A(){
+    return this->A_;
+}
+
+/*  Get b matrix  */
+template <class T>
+Matrix<T> FDM<T>::get_b(){
+    return this->b_;
+}
+
+/*  Get LUT  */
+template <class T>
+Matrix<T> FDM<T>::get_LUT(){
+    return this->LUT_;
+}
+
+/*  Set A matrix  */
+template <class T>
+void FDM<T>::set_A(Matrix<T> A){
+    this->A_ = A;
+    return;
+}
+
+/*  Set b matrix  */
+template <class T>
+void FDM<T>::set_b(Matrix<T> b){
+    this->b_ = b;
+    return;
+}
+
+/*  Set LUT matrix  */
+template <class T>
+void FDM<T>::set_LUT(Matrix<T> LUT){
+    this->LUT_ = LUT;
     return;
 }
 
@@ -701,9 +757,9 @@ void FDM<T>::jacobi(double tol){
 
 /*  Compute the total energy W = E/e0 over the mesh */
 template <class T>
-double FDM<T>::calc_W(Matrix<> S_con){
+double FDM<T>::calc_W(Matrix<T> S_con){
     int e_nodes = S_con.get_n_row();
-    Matrix<> U_con(4,1);
+    Matrix<T> U_con(4,1);
     double W = 0;
     for(int row = 0; row < this->n_row - 1; row++){
         for(int col = 0; col < this->n_col - 1; col++){
@@ -720,6 +776,144 @@ double FDM<T>::calc_W(Matrix<> S_con){
     }
     return W;
 }
+
+/*  
+    Setup A, b, and LUT for the conjugate gradient (unpreconditioned) solver
+    Call CG solver
+
+    tol: tolerance for stop condition 
+*/
+template <class T>
+void FDM<T>::CG(int itr){
+    // setup look-up-table
+    Matrix<T> LUT_CG(this->n_row, this->n_col);  // IDs for free nodes
+    int num_free_nodes = 0;
+    for(int i = 0; i < this->n_row * this->n_col; i++){
+        if(this->state.get(i) == true){
+            LUT_CG.set(i, num_free_nodes);
+            num_free_nodes++;
+        } else {
+            LUT_CG.set(i, -1);
+        }
+    }
+    // setup A and b matrices
+    Matrix<T> A_CG = -4.0*Matrix<>::identity_mat(num_free_nodes);
+    Matrix<T> b_CG(num_free_nodes, 1);
+    auto check = [&](int row, int col) -> bool {
+        return this->get_state(row, col);
+    };
+    auto fixed_phi = [&](int row, int col) -> double {
+        return (int)(!check(row, col))*(this->get_phi(row, col));
+    };
+    for(int row = 0; row < this->n_row; row++){
+        for(int col = 0; col < this->n_col; col++){
+            auto smart_set = [&, col, row](int row_, int col_, int factor){
+                if(LUT_CG.get(row_, col_) >= 0){
+                    A_CG.set(LUT_CG.get(row, col), LUT_CG.get(row_, col_), 
+                        factor*check(row_, col_));
+                }
+                return;
+            };
+            if(this->state.get(row, col) == true){
+                double sum = 0;
+                if(row == 0){
+                    sum -= 2*fixed_phi(row + 1, col) + fixed_phi(row, col - 1)
+                        + fixed_phi(row, col + 1);
+                    smart_set(row + 1, col, 2); 
+                    smart_set(row, col - 1, 1);
+                    smart_set(row, col + 1, 1); 
+                } else if(row == this->n_row - 1) {
+                    sum -= 2*fixed_phi(row - 1, col) + fixed_phi(row, col - 1)
+                        + fixed_phi(row, col + 1);
+                    smart_set(row - 1, col, 2); 
+                    smart_set(row, col - 1, 1);
+                    smart_set(row, col + 1, 1);
+                } else if(col == 0) {
+                    sum -= fixed_phi(row - 1, col) + fixed_phi(row + 1, col)
+                        + 2*fixed_phi(row, col + 1);
+                    smart_set(row, col + 1, 2); 
+                    smart_set(row + 1, col, 1);
+                    smart_set(row - 1, col, 1);
+                } else if(col == this->n_col - 1) {
+                    sum -= fixed_phi(row - 1, col) + fixed_phi(row + 1, col)
+                        + 2*fixed_phi(row, col - 1);
+                    smart_set(row, col - 1, 2); 
+                    smart_set(row + 1, col, 1);
+                    smart_set(row - 1, col, 1);
+                } else {
+                    sum -= fixed_phi(row - 1, col) + fixed_phi(row + 1, col)
+                        + fixed_phi(row, col - 1) + fixed_phi(row, col + 1);
+                    smart_set(row + 1, col, 1); 
+                    smart_set(row - 1, col, 1); 
+                    smart_set(row, col - 1, 1);
+                    smart_set(row, col + 1, 1);
+                }
+                b_CG.set(LUT_CG.get(row, col), sum);
+            }
+        }
+    }
+
+    // convert A to SSPD
+    this->A_ = transpose(A_CG) * A_CG;
+    this->b_ = transpose(A_CG) * b_CG;
+    this->LUT_ = LUT_CG;
+
+    Matrix<> x = Matrix_Solver::CG_solve(this->A_, this->b_, itr);
+
+    for(int row = 0; row < this->n_row; row++){
+        for(int col = 0; col < this->n_col; col++){
+            if(check(row, col) == true){
+                this->set_phi(row, col, x.get(LUT_CG.get(row, col)));
+            }
+        }
+    }
+
+// ----- Output Answers to A2 Q3 -----
+    bool VERBOSE = true;
+// -----------------------------------
+
+    if(VERBOSE){
+        std::cout << "a)" << std::endl;
+        // Attempt Cholesky decomposition on original A_CG matrix
+        try{
+            Matrix<> temp(A_CG.get_n_row(), A_CG.get_n_row());
+            Matrix_Solver::cholesky(A_CG, &temp);
+            std::cout << "cholesky decomposition successful! \n" << std::endl;
+        }catch(const char* msg){
+            std::cout << msg << std::endl;
+        }
+
+        std::cout << "\nb)" << std::endl;
+        // Attempt Cholesky decomposition on new A_ matrix
+        try{
+            Matrix<> temp(this->A_.get_n_row(), this->A_.get_n_row());
+            Matrix_Solver::cholesky(this->A_, &temp);
+            std::cout << "cholesky decomposition successful! \n" << std::endl;
+            temp.show();
+        }catch(const char* msg){
+            std::cout << msg << std::endl;
+        }
+
+        Matrix<> x2(x.get_n_row(), x.get_n_col()); 
+        Matrix_Solver::cholesky_solve(this->A_, this->b_, &x2);
+        std::cout << "\nConjugate Gradient Solution Vector Results" 
+            << std::endl;
+        x.show();
+        std::cout << "\nCholesky Decomposition Solution Vector Results" 
+            << std::endl;
+        x2.show();
+        
+        std::cout << "\nd)" << std::endl;
+        std::cout << "With CG: V(0.06,0.04) = " << x.get(LUT_CG.get(2, 3)) 
+            << std::endl;
+
+        std::cout << "With CD: V(0.06,0.04) = " << x2.get(LUT_CG.get(2, 3)) 
+            << std::endl;
+    }
+
+    return;
+}
+
 
 
 #endif

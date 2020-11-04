@@ -10,7 +10,7 @@
 
 #include <math.h>
 #include "Matrix.h"
-#include "matrix_solver.h" 
+#include "Matrix_Solver.h" 
 
 template <typename T = double>
 class LRN {

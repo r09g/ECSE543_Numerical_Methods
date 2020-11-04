@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "Matrix.h"
 #include "Basic.h"
-#include "matrix_solver.h"
+#include "Matrix_Solver.h"
 #include "LRN.h"
 #include "FDM.h"
 

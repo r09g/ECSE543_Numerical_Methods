@@ -11,7 +11,7 @@
 #include <math.h>
 #include "Matrix.h"
 #include "Basic.h"
-#include "matrix_solver.h"
+#include "Matrix_Solver.h"
 #include "LRN.h"
 #include "FDM.h"
 #include "A1.cpp"
@@ -30,7 +30,8 @@ int main(){
     
     // solve assignment questions here
     try{
-        A2 a2 = A2(2);
+        A2 a2 = A2();
+
     }catch(const char* msg){
         FLAG -= 1;
         cout << msg << endl;

@@ -1,5 +1,5 @@
 /******************************************************************************/
-/* Name: matrix_solver.h                                                      */
+/* Name: Matrix_Solver.h                                                      */
 /* Description: functions for assignment 1 of ECSE 543 Numerical Methods      */
 /* Date: 2020/09/10                                                           */
 /* Author: Raymond Yang                                                       */
@@ -35,6 +35,9 @@ namespace Matrix_Solver{
         void elimination_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1);
     template <typename T>
         void cholesky_solve_banded(Matrix<T>* A, Matrix<T>* b, int HBW=-1);
+
+    template <typename T> Matrix<T> CG_solve(Matrix<T> A, Matrix<T> b, 
+        int itr = -1, Matrix<T> IC = Matrix<T>(0));
 
 }
 
@@ -351,6 +354,52 @@ void Matrix_Solver::cholesky_solve_banded(Matrix<T>* A, Matrix<T>* b, int HBW){
     back_substitution(*A, b);
     return;
 }
+
+/*  
+    Solve Ax = b using Conjugate Gradient (Unpreconditioned)
+
+    A: square, symmetric, P.D.
+    b: output vector
+    tol: tolerance for stopping condition
+    
+    Returns: solution vector
+*/
+template <typename T> 
+Matrix<T> Matrix_Solver::CG_solve(Matrix<T> A, Matrix<T> b, int itr, 
+    Matrix<T> IC){
+    Matrix<T> x(b.get_n_row(), 1);
+    Matrix<T> r(b.get_n_row(), 1);
+    Matrix<T> p(b.get_n_row(), 1);
+    double alpha;
+    double beta;
+    // initial condition
+    if(IC.get_n_row() != b.get_n_row() || IC.get_n_col() != 1){
+        x = Matrix<T>(b.get_n_row(), 1);
+    } else {
+        x = IC;
+    }
+    itr = (itr < 0) ? b.get_n_row() : itr;
+    Matrix<> r_evo(b.get_n_row(), itr + 1);
+
+    // initial guess
+    r = b - A*x;
+    p = r;
+    // iteration
+    int count = 0;
+    while(count <= itr){
+        r_evo.set(0, count, r);
+        alpha = (transpose(p)*r).get(0)/(transpose(p)*A*p).get(0);
+        x = x + alpha*p;
+        r = b - A*x;
+        beta = -1*(transpose(p)*A*r).get(0)/(transpose(p)*A*p).get(0);
+        p = r + beta*p;
+        count++;
+    }
+    
+    r_evo.write_mat("./data/A2/r_results.csv");
+    return x;
+}
+
 
 
 #endif

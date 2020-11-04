@@ -94,10 +94,26 @@ void A2::Q3(){
     cout << "Solving A2 Q3..." << endl;
     cout << "--------------------" << endl;
 
-    
+    // ----- Part a -----
+    {
+        double width = 0.1;
+        double h = 0.02; 
+
+        FDM<> fdm(width/h + 1, width/h + 1, h);
+        // set boundaries
+        // lower Dirichlet bound
+        fdm.set(0, 0, 0, width/h, 0, false);
+        // left Dirichlet bound
+        fdm.set(0, width/h, 0, 0, 0, false);
+        // top right Dirichlet bound
+        fdm.set(0.08/h, width/h, 0.06/h, width/h, 110, false);
+
+        fdm.CG();
+        // fdm.get_phi().show();
+    }
 
 
-    cout << "\nA2 Q2 Solved." << endl;
+    cout << "\nA2 Q3 Solved." << endl;
     cout << endl << ">>> End of ECSE 543 Assignment 2 <<<" << endl;
     return;
 }

@@ -645,8 +645,8 @@ void Matrix<T>::write_mat(const std::string& filepath){
     std::ofstream file;
     file.open(filepath);
     ss << this->n_row << "," << this->n_col << std::endl;
-    for(int i = 0; i < this->n_col; i++){
-        for(int j = 0; j < this->n_row; j++){
+    for(int i = 0; i < this->n_row; i++){
+        for(int j = 0; j < this->n_col; j++){
             ss << this->get(i,j) << ",";
         } 
         ss << std::endl;
