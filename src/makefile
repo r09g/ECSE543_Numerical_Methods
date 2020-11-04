@@ -4,3 +4,8 @@
 
 main: main.cpp
 	g++ -O3 -o $@ $^
+	main
+	del main.exe
+
+clean:
+	del *.exe
