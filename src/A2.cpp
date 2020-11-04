@@ -108,7 +108,7 @@ void A2::Q3(){
         // top right Dirichlet bound
         fdm.set(0.08/h, width/h, 0.06/h, width/h, 110, false);
 
-        fdm.CG();
+        fdm.CG(-1, true);
         // fdm.get_phi().show();
     }
 

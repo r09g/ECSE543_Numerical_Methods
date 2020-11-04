@@ -86,6 +86,8 @@ class Matrix {
         Matrix<T> div(const T value);
         T sum();
         T mean();
+        T max();
+        T min();
 
         // check matrix characteristics
         bool is_square();
@@ -589,13 +591,25 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat){
 /*  sum of all elements in matrix  */
 template <class T>
 T Matrix<T>::sum(){
-    return Basic::sum(this->data,this->n_col * this->n_row);
+    return Basic::sum(this->data, this->n_col * this->n_row);
 }
 
 /*  mean of all elements in matrix  */
 template <class T>
 T Matrix<T>::mean(){
-    return Basic::mean(this->data,this->n_col * this->n_row);
+    return Basic::mean(this->data, this->n_col * this->n_row);
+}
+
+/*  The value of the maximum element in matrix  */
+template <class T>
+T Matrix<T>::max(){
+    return Basic::max(this->data, this->n_col * this->n_row);
+}
+
+/*  The value of the minimum element in matrix  */
+template <class T>
+T Matrix<T>::min(){
+    return Basic::min(this->data, this->n_col * this->n_row);
 }
 
 /*  check if matrix is square; true -> square  */

@@ -26,6 +26,13 @@ namespace Basic{
     
     template <typename T, typename C>
     double dot(const T* data1, const C* data2, unsigned int length);
+
+    template <typename T, size_t N> double max(const T (&data)[N]);
+    template <typename T> double max(const T* data, unsigned int length);
+    
+    template <typename T, size_t N> double min(const T (&data)[N]);
+    template <typename T> double min(const T* data, unsigned int length);
+
     
     template <typename T, size_t N> double* to_double(const T (&data)[N]);
     template <typename T> double* to_double(const T* data, unsigned int length);
@@ -116,6 +123,42 @@ double Basic::dot(const T* data1, const C* data2, unsigned int length){
     double result = 0.0;
     for(int i = 0; i < length; i++){
         result += data1[i] * data2[i];
+    }
+    return result;
+}
+
+template <typename T, size_t N>
+double Basic::max(const T (&data)[N]){
+    double result = data[0];
+    for(int i = 1; i < N; i++){
+        result = (result < data[i]) ? data[i] : result;
+    }
+    return result;
+}
+
+template <typename T> 
+double Basic::max(const T* data, unsigned int length){
+    double result = data[0];
+    for(int i = 1; i < length; i++){
+        result = (result < data[i]) ? data[i] : result;
+    }
+    return result;
+}
+
+template <typename T, size_t N> 
+double Basic::min(const T (&data)[N]){
+    double result = data[0];
+    for(int i = 1; i < N; i++){
+        result = (result > data[i]) ? data[i] : result;
+    }
+    return result;
+}
+
+template <typename T> 
+double Basic::min(const T* data, unsigned int length){
+    double result = data[0];
+    for(int i = 1; i < length; i++){
+        result = (result > data[i]) ? data[i] : result;
     }
     return result;
 }

@@ -83,7 +83,7 @@ class FDM {
         // Solvers
         void SOR(double omega, double tol);
         void jacobi(double tol);
-        void CG(int itr = -1);
+        void CG(int itr = -1, bool VERBOSE = false);
 
         // Post Process
         double calc_W(Matrix<T> S_con);
@@ -784,7 +784,7 @@ double FDM<T>::calc_W(Matrix<T> S_con){
     tol: tolerance for stop condition 
 */
 template <class T>
-void FDM<T>::CG(int itr){
+void FDM<T>::CG(int itr, bool VERBOSE){
     // setup look-up-table
     Matrix<T> LUT_CG(this->n_row, this->n_col);  // IDs for free nodes
     int num_free_nodes = 0;
@@ -867,10 +867,6 @@ void FDM<T>::CG(int itr){
             }
         }
     }
-
-// ----- Output Answers to A2 Q3 -----
-    bool VERBOSE = true;
-// -----------------------------------
 
     if(VERBOSE){
         std::cout << "a)" << std::endl;
