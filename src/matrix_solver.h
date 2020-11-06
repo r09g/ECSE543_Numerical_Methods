@@ -379,7 +379,7 @@ Matrix<T> Matrix_Solver::CG_solve(Matrix<T> A, Matrix<T> b, int itr,
         x = IC;
     }
     itr = (itr < 0) ? b.get_n_row() : itr;
-    Matrix<> r_evo(b.get_n_row(), itr + 1);
+    // Matrix<> r_evo(b.get_n_row(), itr + 1);
 
     // initial guess
     r = b - A*x;
@@ -387,7 +387,7 @@ Matrix<T> Matrix_Solver::CG_solve(Matrix<T> A, Matrix<T> b, int itr,
     // iteration
     int count = 0;
     while(count <= itr){
-        r_evo.set(0, count, r);
+        // r_evo.set(0, count, r);
         alpha = (transpose(p)*r).get(0)/(transpose(p)*A*p).get(0);
         x = x + alpha*p;
         r = b - A*x;
@@ -396,10 +396,8 @@ Matrix<T> Matrix_Solver::CG_solve(Matrix<T> A, Matrix<T> b, int itr,
         count++;
     }
     
-    r_evo.write_mat("./data/A2/r_results.csv");
+    // r_evo.write_mat("./data/A2/r_results.csv", 7);
     return x;
 }
-
-
 
 #endif

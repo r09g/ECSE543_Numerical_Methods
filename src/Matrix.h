@@ -13,6 +13,7 @@
 #include <new>
 #include <cstdlib>
 #include <type_traits>
+#include <iomanip>
 #include "Basic.h"
 
 template <class T = double>
@@ -101,7 +102,7 @@ class Matrix {
 
         // I/O to Excel
         static Matrix<T> read_mat(const std::string& filepath);
-        void write_mat(const std::string& filepath);
+        void write_mat(const std::string& filepath, int precision = -1);
 
         // destructor
         ~Matrix();
@@ -652,12 +653,20 @@ bool Matrix<T>::operator== (const Matrix& mat){
     return true;
 }
 
-/*  write current matrix to csv file  */
+/*  
+    Write current matrix to csv file  
+
+    precision: number of digits
+*/
 template <class T>
-void Matrix<T>::write_mat(const std::string& filepath){
+void Matrix<T>::write_mat(const std::string& filepath, int precision){
+    if(precision < 0){
+        precision = 6;  // default
+    }
     std::stringstream ss;
     std::ofstream file;
     file.open(filepath);
+    ss << std::setprecision(precision);
     ss << this->n_row << "," << this->n_col << std::endl;
     for(int i = 0; i < this->n_row; i++){
         for(int j = 0; j < this->n_col; j++){

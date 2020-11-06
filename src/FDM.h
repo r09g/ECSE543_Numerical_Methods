@@ -895,6 +895,7 @@ void FDM<T>::CG(int itr, bool VERBOSE){
         std::cout << "\nConjugate Gradient Solution Vector Results" 
             << std::endl;
         x.show();
+
         std::cout << "\nCholesky Decomposition Solution Vector Results" 
             << std::endl;
         x2.show();

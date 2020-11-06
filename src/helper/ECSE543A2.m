@@ -11,6 +11,11 @@ end
 
 figure,
 hold on,
-plot(0:size(r,2)-1, l2norm)
-plot(0:size(r,2)-1, linfnorm)
+plot(0:size(r,2)-1, l2norm, 'LineWidth', 1)
+plot(0:size(r,2)-1, linfnorm, 'LineWidth', 1)
 xlim([0 size(r,2)-1])
+grid on
+title("L2 Norm and L\infty Norm")
+xlabel("Iterations")
+ylabel("Value")
+legend("L2 Norm","L\infty Norm")
