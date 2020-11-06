@@ -25,8 +25,6 @@ int main(){
     cout << endl;
     srand(time(NULL));
     auto start = chrono::high_resolution_clock::now(); 
-
-    cout << ">>> ECSE 543 Numerical Methods Assignment 1 <<<" << endl;
     
     // solve assignment questions here
     try{

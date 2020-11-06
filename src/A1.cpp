@@ -19,14 +19,14 @@ using namespace std;
 extern int FLAG;
 
 class A1{
+    private:
+        // questions
+        void Q1();
+        void Q2();
+        void Q3();
+
     public:
-    A1(int question=-1);
-
-    // Questions
-    void Q1();
-    void Q2();
-    void Q3();
-
+        A1(int question=-1);
 };
 
 // -----------------------------------------------------------------------------

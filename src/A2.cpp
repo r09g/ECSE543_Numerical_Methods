@@ -17,13 +17,13 @@ extern int FLAG;
 using namespace std;
 
 class A2{
+    private:
+        // questions
+        void Q2();
+        void Q3();
+
     public:
-    A2(int question=-1);
-
-    // Questions
-    void Q2();
-    void Q3();
-
+        A2(int question=-1);
 };
 
 // -----------------------------------------------------------------------------
@@ -32,6 +32,7 @@ class A2{
 
 /*  Executes all questions  */
 A2::A2(int question){
+    std::cout << ">>> ECSE 543 Numerical Methods Assignment 2 <<<" << std::endl;
     switch(question){
         case 2:
             this->Q2();
