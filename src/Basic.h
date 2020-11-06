@@ -33,7 +33,6 @@ namespace Basic{
     template <typename T, size_t N> double min(const T (&data)[N]);
     template <typename T> double min(const T* data, unsigned int length);
 
-    
     template <typename T, size_t N> double* to_double(const T (&data)[N]);
     template <typename T> double* to_double(const T* data, unsigned int length);
     
