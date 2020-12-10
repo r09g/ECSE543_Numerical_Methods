@@ -14,8 +14,11 @@
 #include "Matrix_Solver.h"
 #include "LRN.h"
 #include "FDM.h"
+#include "Poly_CF.h"
 #include "A1.cpp"
 #include "A2.cpp"
+#include "A3.cpp"
+#include "NLEq.h"
 
 using namespace std;
 
@@ -28,7 +31,9 @@ int main(){
     
     // solve assignment questions here
     try{
-        A2 a2 = A2();
+	A1 a1 = A1();
+	A2 a2 = A2();
+        A3 a3 = A3();
 
     }catch(const char* msg){
         FLAG -= 1;

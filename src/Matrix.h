@@ -70,6 +70,7 @@ class Matrix {
         Matrix<T> get_col(int col) const;
         int get_n_row() const;
         int get_n_col() const;
+        int find(T value) const;
 
         // copy (duplicate) matrix
         Matrix<T>& operator= (const Matrix<T>& mat);
@@ -85,10 +86,12 @@ class Matrix {
         Matrix<T> operator* (const Matrix<T>& mat);
         Matrix<T> mul(const T value);
         Matrix<T> div(const T value);
+        Matrix<T> abs(); 
         T sum();
         T mean();
         T max();
         T min();
+        T norm(int order);
 
         // check matrix characteristics
         bool is_square();
@@ -480,6 +483,17 @@ int Matrix<T>::get_n_col() const{
     return this->n_col;
 }
 
+/*  find the index of the first element that matches  */
+template <class T>
+int Matrix<T>::find(T value) const{
+    for(int i = 0; i < this->n_col*this->n_row; i++){
+        if(value == this->data[i]){
+            return i;
+        }
+    }
+    return -1;
+}
+
 /*  deallocate current data array in Matrix and assign data array with values
     from "mat"; returns self  */
 template <class T>
@@ -589,6 +603,17 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat){
     return output;
 }
 
+/*  Take absolute values of all elements in matrix  */
+template <class T>
+Matrix<T> Matrix<T>::abs(){
+    for(int i = 0; i < this->n_row*this->n_col; i++){
+        if(this->data[i] < 0){
+            this->data[i] = -(this->data[i]);
+        }
+    }
+    return *this;
+} 
+
 /*  sum of all elements in matrix  */
 template <class T>
 T Matrix<T>::sum(){
@@ -611,6 +636,12 @@ T Matrix<T>::max(){
 template <class T>
 T Matrix<T>::min(){
     return Basic::min(this->data, this->n_col * this->n_row);
+}
+
+/*  The L-(order) norm of the vector/matrix  */
+template <class T>
+T Matrix<T>::norm(int order){
+    return pow((((*this)^(order)).abs()).sum(), 1.0/order);
 }
 
 /*  check if matrix is square; true -> square  */
@@ -783,6 +814,125 @@ Matrix<T> operator/ (Matrix<T> mat, T value){
         mat.set(i, mat.get(i) / value); 
     }
     return mat;
+}
+
+/*  overload ^: matrix ^ value  */
+template <class T>
+Matrix<T> operator^ (Matrix<T> mat, int value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        mat.set(i, pow(mat.get(i), value)); 
+    }
+    return mat;
+}
+
+/*  overload <: matrix < value  */
+template <class T>
+bool operator< (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) >= value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload <: value < matrix  */
+template <class T>
+bool operator< (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) <= value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload >: matrix > value  */
+template <class T>
+bool operator> (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) <= value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload >: value > matrix  */
+template <class T>
+bool operator> (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) >= value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload <=: matrix <= value  */
+template <class T>
+bool operator<= (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) > value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload <=: value <= matrix  */
+template <class T>
+bool operator<= (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) < value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload >=: matrix >= value  */
+template <class T>
+bool operator>= (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) < value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload >=: value >= matrix  */
+template <class T>
+bool operator>= (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) > value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload ==: matrix == value  */
+template <class T>
+bool operator== (Matrix<T> mat, T value){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) != value){
+            return false;
+        } 
+    }
+    return true;
+}
+
+/*  overload ==: value == matrix  */
+template <class T>
+bool operator== (T value, Matrix<T> mat){
+    for(int i = 0; i < mat.get_n_col() * mat.get_n_row(); i++){
+        if(mat.get(i) != value){
+            return false;
+        } 
+    }
+    return true;
 }
 
 /*  creates a matrix containing the transpose of mat  */
